@@ -189,6 +189,58 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
   .btn,.prop-link{min-height:44px}
   input[type=range]::-webkit-slider-thumb{width:26px;height:26px}
 }
+
+/* ── FIX #1: Tooltip / info icons ── */
+.info-wrap{position:relative;display:inline-flex;align-items:center;vertical-align:middle;margin-left:5px}
+.info-btn{width:16px;height:16px;border-radius:50%;background:var(--paper3);border:none;color:var(--ink3);font-size:10px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1;padding:0;transition:all .15s;flex-shrink:0}
+.info-btn:hover,.info-btn:focus{background:var(--blue-bg);color:var(--blue);outline:none}
+.info-btn[aria-expanded=true]{background:var(--blue-bg);color:var(--blue)}
+.tooltip-box{display:none;position:absolute;z-index:200;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:240px;background:var(--white);border:1.5px solid var(--paper3);border-radius:10px;padding:.65rem .85rem;font-size:12px;color:var(--ink2);line-height:1.55;box-shadow:var(--shadow-md);pointer-events:none}
+.tooltip-box.open{display:block;pointer-events:auto}
+.tooltip-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--paper3)}
+.tooltip-box::before{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--white);margin-top:-1px;z-index:1}
+@media(max-width:640px){.tooltip-box{left:auto;right:0;transform:none;width:220px}.tooltip-box::after,.tooltip-box::before{left:auto;right:12px;transform:none}}
+/* ── FIX #2: Compare summary banner ── */
+.compare-summary{font-family:'DM Serif Display',serif;font-size:1.15rem;font-weight:400;color:var(--ink);margin-bottom:1rem;line-height:1.4;text-align:center;padding:.75rem 1rem;background:var(--paper);border-radius:10px;border:1px solid var(--paper3)}
+.compare-summary .cs-amount{color:var(--green);font-size:1.35rem}
+.compare-summary .cs-amount.r{color:var(--red)}
+.compare-card.featured{background:var(--green-bg);}
+.compare-card .cc-badge{font-size:11px;padding:4px 12px;letter-spacing:.06em;font-weight:600}
+/* ── FIX #3: Negative return callout ── */
+.neg-return-callout{background:var(--blue-bg);border:1.5px solid rgba(26,90,138,.2);border-radius:12px;padding:1rem 1.15rem;margin-top:1rem;display:none}
+.neg-return-callout.show{display:block}
+.neg-return-callout .nrc-title{font-size:13px;font-weight:500;color:var(--blue);margin-bottom:.4rem;display:flex;align-items:center;gap:6px}
+.neg-return-callout .nrc-body{font-size:12px;color:var(--ink2);line-height:1.65}
+.neg-return-callout .nrc-body strong{font-weight:500;color:var(--ink)}
+/* ── FIX #4: Tiered inputs ── */
+.tier1-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:1.1rem}
+.advanced-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:.8rem 0;margin-top:1rem;border-top:1px dashed var(--paper3);user-select:none}
+.advanced-toggle .at-label{font-size:12px;font-weight:500;color:var(--ink3);display:flex;align-items:center;gap:8px}
+.advanced-toggle .at-label::before{content:'';display:block;width:14px;height:1px;background:var(--paper3)}
+.advanced-toggle .at-tip{font-size:11px;color:var(--ink3);font-weight:300;margin-left:4px;font-style:italic}
+.advanced-toggle .at-chevron{font-size:11px;color:var(--ink3);transition:transform .2s}
+.advanced-toggle.open .at-chevron{transform:rotate(180deg)}
+.advanced-inputs{display:none}
+.advanced-inputs.open{display:contents}
+.form-section-head{font-size:11px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.08em;margin:1.25rem 0 .6rem;grid-column:1/-1;padding-bottom:.4rem;border-bottom:1px solid var(--paper2)}
+/* ── FIX #5: Mobile polish ── */
+@media(max-width:640px){
+  .compare-summary{font-size:1rem}
+  .compare-summary .cs-amount{font-size:1.1rem}
+  .breakdown-bar{height:14px}
+  .breakdown-bar-legend{gap:10px;font-size:11px}
+  .export-bar .btn{width:100%;justify-content:center}
+  .tooltip-box{width:200px}
+  .tier1-grid{grid-template-columns:1fr}
+  input[type=range]::-webkit-slider-thumb{width:28px;height:28px}
+  input[type=range]::-moz-range-thumb{width:28px;height:28px}
+  input[type=range]{height:6px}
+  .btn{min-height:48px}
+  .sval-input{min-height:40px}
+}
+@media(max-width:780px){
+  .tier1-grid{grid-template-columns:repeat(2,1fr)}
+}
 </style>
 </head>
 <body>
@@ -205,7 +257,8 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
   </div>
   <div class="section-label">Your home</div>
   <div class="panel">
-    <div class="inputs-grid">
+    <!-- TIER 1: Essential inputs always visible -->
+    <div class="tier1-grid">
       <div class="input-group full-width">
         <label>Property Address</label>
         <input type="text" id="address" class="addr" placeholder="e.g. 123 Main St, City, State ZIP" oninput="updatePropLinks();updateTitle()">
@@ -217,64 +270,58 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
         <span class="hint">Your Zestimate, Redfin estimate, or own assessment</span>
       </div>
       <div class="input-group">
-        <label>Expected Annual Growth (%)</label>
-        <input type="text" id="apprRate" value="3%" placeholder="3%" onblur="fmtPctField(this)" oninput="updateApprSuggest();recalculate()">
-        <span class="hint">Used to project future value. Nat'l avg ~3-4%/yr.</span>
-      </div>
-    </div>
-    <div id="prop-links-section" style="display:none;margin-top:1rem;margin-bottom:1.25rem">
-      <div style="font-size:11px;color:var(--ink3);margin-bottom:.5rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em">Look up value on</div>
-      <div class="prop-links" id="prop-links"></div>
-    </div>
-    <div style="border-top:1.5px dashed var(--paper3);margin:1.5rem 0"></div>
-    <div class="inputs-grid">
-      <div class="input-group">
         <label>Purchase Price</label>
         <input type="text" id="purchase" value="" placeholder="$300,000" onblur="fmtDollarField(this)" oninput="onAnyInputChange()">
         <span class="hint">Original price paid</span>
       </div>
       <div class="input-group">
-        <label>Down Payment (%)</label>
-        <input type="text" id="down" value="20%" placeholder="20%" onblur="fmtPctField(this);onAnyInputChange()" oninput="onAnyInputChange()">
-        <div id="down-computed" style="font-size:11px;color:var(--ink3);margin-top:3px;font-family:'DM Mono',monospace"></div>
-        <span class="hint">% of purchase price</span>
-      </div>
-      <div class="input-group">
-        <label>Purchase Month</label>
-        <input type="month" id="purchaseDate" onchange="onAnyInputChange()">
-        <span class="hint">Used for the 2-year capital gains exclusion check</span>
+        <label>Target Sale Month</label>
+        <input type="month" id="saleMonth" onchange="onSaleMonthChange()">
+        <span class="hint">When you plan to sell</span>
       </div>
       <div class="input-group">
         <label>Interest Rate (%)</label>
         <input type="text" id="rate" value="6%" placeholder="6%" onblur="fmtPctField(this);onAnyInputChange()" oninput="onAnyInputChange()">
-        <span class="hint">Annual rate on mortgage</span>
-      </div>
-      <div class="input-group">
-        <label>Current Mortgage Balance</label>
-        <input type="text" id="balance" value="" class="auto-val" placeholder="auto-calculated" onblur="fmtDollarField(this)" oninput="onBalanceManualEdit()">
-        <span class="auto-badge" id="balance-badge">Auto-calculated</span>
-        <span class="override-link" id="balance-override" onclick="unlockBalance()">Override manually</span>
-        <span class="override-link" id="balance-reset" onclick="resetBalance()" style="display:none">&#8635; Reset to auto</span>
-        <div class="pmi-badge" id="pmi-badge">&#9888; <span id="pmi-badge-text"></span></div>
-        <span class="hint" id="balance-hint">Estimated from purchase date, rate &amp; term</span>
-      </div>
-      <div class="input-group">
-        <label>Target Sale Month</label>
-        <input type="month" id="saleMonth" onchange="onSaleMonthChange()">
-        <span class="hint">Pick a month — auto-fills months below</span>
-      </div>
-      <div class="input-group">
-        <label>Months Until Sale</label>
-        <input type="number" id="months" value="12" min="0" max="240" step="1" oninput="onMonthsManualEdit();recalculate()">
-        <span class="hint">Or type directly — updates the month above</span>
+        <span class="hint">Annual rate on your mortgage</span>
       </div>
     </div>
-    <div class="collapsible-toggle open" id="adv-toggle" onclick="toggleAdvanced()">
-      <div class="ct-label">Loan details &amp; tax settings</div>
-      <span class="ct-chevron">&#9660;</span>
+    <div id="prop-links-section" style="display:none;margin-top:.75rem;margin-bottom:.25rem">
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:.5rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em">Look up value on</div>
+      <div class="prop-links" id="prop-links"></div>
     </div>
-    <div class="collapsible-content open" id="adv-content">
+    <!-- TIER 2: Advanced inputs collapsible -->
+    <div class="advanced-toggle" id="adv-basic-toggle" onclick="toggleAdvancedBasic()">
+      <div class="at-label">Advanced inputs <span class="at-tip">Refine your estimate</span></div>
+      <span class="at-chevron">&#9660;</span>
+    </div>
+    <div class="advanced-inputs" id="adv-basic-content">
       <div class="inputs-grid" style="margin-top:.75rem">
+        <div class="form-section-head">Loan details</div>
+        <div class="input-group">
+          <label>Down Payment (%)</label>
+          <input type="text" id="down" value="20%" placeholder="20%" onblur="fmtPctField(this);onAnyInputChange()" oninput="onAnyInputChange()">
+          <div id="down-computed" style="font-size:11px;color:var(--ink3);margin-top:3px;font-family:'DM Mono',monospace"></div>
+          <span class="hint">% of purchase price</span>
+        </div>
+        <div class="input-group">
+          <label>Purchase Month</label>
+          <input type="month" id="purchaseDate" onchange="onAnyInputChange()">
+          <span class="hint">Used for the 2-year capital gains exclusion check</span>
+        </div>
+        <div class="input-group">
+          <label>Months Until Sale</label>
+          <input type="number" id="months" value="12" min="0" max="240" step="1" oninput="onMonthsManualEdit();recalculate()">
+          <span class="hint">Or type directly — updates the month above</span>
+        </div>
+        <div class="input-group">
+          <label>Current Mortgage Balance</label>
+          <input type="text" id="balance" value="" class="auto-val" placeholder="auto-calculated" onblur="fmtDollarField(this)" oninput="onBalanceManualEdit()">
+          <span class="auto-badge" id="balance-badge">Auto-calculated</span>
+          <span class="override-link" id="balance-override" onclick="unlockBalance()">Override manually</span>
+          <span class="override-link" id="balance-reset" onclick="resetBalance()" style="display:none">&#8635; Reset to auto</span>
+          <div class="pmi-badge" id="pmi-badge">&#9888; <span id="pmi-badge-text"></span></div>
+          <span class="hint" id="balance-hint">Estimated from purchase date, rate &amp; term</span>
+        </div>
         <div class="input-group">
           <label>Original Loan Term</label>
           <select id="loanTerm" onchange="onAnyInputChange()">
@@ -292,6 +339,12 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
           <span class="override-link" id="pmt-override" onclick="unlockPmt()">Override manually</span>
           <span class="hint">Principal &amp; interest only</span>
         </div>
+        <div class="input-group">
+          <label>Expected Annual Growth (%)</label>
+          <input type="text" id="apprRate" value="3%" placeholder="3%" onblur="fmtPctField(this)" oninput="updateApprSuggest();recalculate()">
+          <span class="hint">Used to project future value. Nat'l avg ~3-4%/yr.</span>
+        </div>
+        <div class="form-section-head">Selling costs &amp; adjustments</div>
         <div class="input-group">
           <label>Extra Monthly Principal ($)</label>
           <input type="text" id="extraPmt" value="" placeholder="$0" onblur="fmtDollarField(this)" oninput="onExtraInput();recalculate()">
@@ -313,6 +366,7 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
           <input type="text" id="otherAdj" value="" placeholder="$0" onblur="fmtDollarField(this)" oninput="recalculate()">
           <span class="hint">HOA payoffs, tax prorations, transfer fees, etc.</span>
         </div>
+        <div class="form-section-head">Tax settings</div>
         <div class="input-group">
           <label>PMI Rate (%/yr)</label>
           <input type="text" id="pmiRate" value="0.8%" placeholder="0.8%" onblur="fmtPctField(this)" oninput="recalculate()">
@@ -350,13 +404,22 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
     <div class="breakeven">
       <div class="breakeven-icon">&#9878;&#65039;</div>
       <div class="breakeven-text">
-        <div class="lbl">Break-even sale price</div>
+        <div class="lbl" style="display:flex;align-items:center;gap:4px">Break-even sale price
+          <span class="info-wrap">
+            <button class="info-btn" aria-label="What is break-even?" aria-expanded="false" onclick="toggleTip(this)">?</button>
+            <div class="tooltip-box" role="tooltip">The minimum sale price where you walk away with exactly $0 — after your mortgage payoff, agent fees, prep costs, and any capital gains tax are all covered.</div>
+          </span>
+        </div>
         <div class="val" id="breakeven-val">-</div>
         <div class="sub" id="breakeven-sub"></div>
         <div class="explain">The minimum price you need to sell for to walk away with $0 after paying off your mortgage, all selling costs, and any capital gains tax.</div>
       </div>
     </div>
     <div class="metrics" id="metrics" style="margin-top:1.5rem"></div>
+    <div class="neg-return-callout" id="neg-return-callout">
+      <div class="nrc-title">&#8505;&#65039; What does a negative return mean?</div>
+      <div class="nrc-body" id="nrc-body"></div>
+    </div>
     <div class="section-label">Fine-tune assumptions</div>
     <div class="panel">
       <div class="slider-row" id="fv-slider-row">
@@ -392,6 +455,7 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
         <label>Compare selling in <strong id="now-mo-label" style="color:var(--ink);font-family:'DM Mono',monospace;font-size:12px;font-weight:500"></strong> against:</label>
         <select id="later-month-sel" onchange="updateCompare()"></select>
       </div>
+      <div id="compare-summary" class="compare-summary" style="display:none"></div>
       <div class="compare-grid" id="compare-grid"></div>
       <div class="compare-delta" id="compare-delta"></div>
     </div>
@@ -653,6 +717,19 @@ function updateCompare(){
     if(intSwing>5000&&!laterBetter)msg+=' However, waiting costs an additional <strong>'+fmt(intSwing)+'</strong> in mortgage interest.';
   }
   deltaEl.innerHTML=msg;deltaEl.style.display='block';
+
+  // FIX #2: bold summary banner above the cards
+  const sumEl=document.getElementById('compare-summary');
+  if(sumEl){
+    if(tied){
+      sumEl.style.display='none';
+    } else {
+      sumEl.style.display='block';
+      const winLabel=laterBetter?labelFrom(laterYM):nowLabel;
+      const amtCls=laterBetter?'cs-amount g':'cs-amount';
+      sumEl.innerHTML='Selling in <strong>'+winLabel+'</strong> nets you <span class="'+amtCls+'">'+fmt(Math.abs(diff))+' more</span> at closing.';
+    }
+  }
 }
 function recalculate(){
   S.address=document.getElementById('address').value.trim();
@@ -717,12 +794,30 @@ function update(){
   if(!R.qualifies){const mo=24-R.ownedMo;cgEl.className='note-box note-red';cgEl.innerHTML='<strong>Heads up:</strong> At time of sale you\'ll be ~<strong>'+mo+' month'+(mo!==1?'s':'')+'</strong> short of the 2-year ownership requirement. The full ~'+fmt(R.grossGain)+' gain could be taxable. Consider waiting, or consult a CPA.';}
   else if(S.cgRate===0){cgEl.className='note-box note-green';const bn=S.improvements>0?' (including '+fmt(S.improvements)+' in improvements)':'';cgEl.innerHTML='<strong>Good news:</strong> You likely qualify for the IRS primary residence exclusion ('+(S.filingStatus==='married'?'$500,000 married/joint':'$250,000 single')+'). Your estimated gain of ~'+fmt(R.grossGain)+' above your '+fmt(R.costBasis)+' cost basis'+bn+' is within the limit \u2014 you likely owe <strong>$0</strong> in capital gains.';}
   else{cgEl.className='note-box note-amber';cgEl.innerHTML='At <strong>'+Math.round(S.cgRate)+'%</strong>, estimated capital gains tax is <strong>'+fmt(R.cgTax)+'</strong> on ~'+fmt(R.taxableGain)+' taxable gain after the '+fmt(R.exclusion)+' exclusion. Cost basis: '+fmt(R.costBasis)+(S.improvements>0?' (purchase + improvements)':'')+'. Long-term rates: 0%, 15%, or 20% by income. Consult a CPA.';}
-  document.getElementById('metrics').innerHTML='<div class="metric-card"><div class="lbl">Est. sale price</div><div class="val">'+fmt(S.fv)+'</div></div><div class="metric-card"><div class="lbl">Payoff at sale</div><div class="val">'+fmt(R.payoff)+'</div>'+(R.extraSavings>0?'<div class="sub" style="color:var(--green)">\u2193 '+fmt(R.extraSavings)+' saved via extra pmts</div>':'')+'</div><div class="metric-card"><div class="lbl">Total costs</div><div class="val r">'+fmt(R.totalCosts)+'</div></div><div class="metric-card"><div class="lbl">Net cash at closing</div><div class="val '+cc(R.netAtClose)+'">'+fmt(R.netAtClose)+'</div><div class="sub">After payoff &amp; all costs</div></div><div class="metric-card"><div class="lbl">Net gain on investment</div><div class="val '+cc(R.netProfitWithPMI)+'">'+fmtSign(R.netProfitWithPMI)+'</div><div class="sub">'+(R.totalPMI>0?'After costs, interest &amp; PMI':'After all costs &amp; interest')+'</div></div>';
+  const payoffTip=infoIcon('Your remaining mortgage balance projected to the sale date by amortizing monthly payments forward. Includes any extra principal payments you\u2019re making.');
+  const gainTip=infoIcon('Your true investment return \u2014 appreciation minus all interest paid, selling costs, and PMI. This is NOT the cash you receive at closing; it\u2019s whether owning the home made financial sense overall.');
+  const pmiTip=infoIcon('PMI (Private Mortgage Insurance) applies when your down payment was less than 20%. It\u2019s charged monthly until your balance drops to 80% of the original purchase price.');
+  document.getElementById('metrics').innerHTML=
+    '<div class="metric-card"><div class="lbl">Est. sale price</div><div class="val">'+fmt(S.fv)+'</div></div>'+
+    '<div class="metric-card"><div class="lbl" style="display:flex;align-items:center;gap:3px">Payoff at sale'+payoffTip+'</div><div class="val">'+fmt(R.payoff)+'</div>'+(R.extraSavings>0?'<div class="sub" style="color:var(--green)">\u2193 '+fmt(R.extraSavings)+' from extra pmts</div>':'')+'</div>'+
+    '<div class="metric-card"><div class="lbl">Total costs</div><div class="val r">'+fmt(R.totalCosts)+'</div></div>'+
+    '<div class="metric-card"><div class="lbl">Net cash at closing</div><div class="val '+cc(R.netAtClose)+'">'+fmt(R.netAtClose)+'</div><div class="sub">After payoff &amp; all costs</div></div>'+
+    '<div class="metric-card"><div class="lbl" style="display:flex;align-items:center;gap:3px">Net gain on investment'+gainTip+'</div><div class="val '+cc(R.netProfitWithPMI)+'">'+fmtSign(R.netProfitWithPMI)+'</div><div class="sub">'+(R.totalPMI>0?'After costs, interest &amp; PMI'+pmiTip:'After all costs &amp; interest')+'</div></div>';
+
+  // FIX #3: negative return callout
+  const nrcEl=document.getElementById('neg-return-callout');
+  const nrcBody=document.getElementById('nrc-body');
+  if(R.netProfitWithPMI<0&&S.fv>0){
+    nrcEl.classList.add('show');
+    nrcBody.innerHTML='A negative return means your total costs (interest, selling fees'+(R.totalPMI>0?', PMI':'')+') exceeded your price appreciation. <strong>But you still walk away with '+fmt(R.netAtClose)+' cash at closing.</strong> Your down payment and principal payments are your own money coming back to you \u2014 not a loss. This metric shows the full economic picture of owning vs. renting or investing elsewhere.';
+  } else {
+    nrcEl.classList.remove('show');
+  }
   const bT=S.fv>0?S.fv:1;
   const pW=Math.round(Math.min(R.payoff/bT*100,100));
   const cW=Math.round(Math.min(R.totalCosts/bT*100,100-pW));
   const nW=Math.max(0,100-pW-cW);
-  const barH='<div class="breakdown-bar"><div class="breakdown-bar-seg bb-payoff" style="width:'+pW+'%"></div><div class="breakdown-bar-seg bb-costs" style="width:'+cW+'%"></div><div class="breakdown-bar-seg bb-net" style="width:'+nW+'%"></div></div><div class="breakdown-bar-legend"><span><span class="bb-dot" style="background:#b83228"></span>Mortgage payoff '+fmt(R.payoff)+' ('+pW+'%)</span><span><span class="bb-dot" style="background:#c8a96e"></span>Costs &amp; fees '+fmt(R.totalCosts)+' ('+cW+'%)</span><span><span class="bb-dot" style="background:#1a7a5e"></span>Net to you '+fmt(Math.max(0,R.netAtClose))+' ('+nW+'%)</span></div>';
+  const barH='<div class="breakdown-bar"><div class="breakdown-bar-seg bb-payoff" style="width:'+pW+'%;min-width:'+(pW>0?'6px':'0')+'"></div><div class="breakdown-bar-seg bb-costs" style="width:'+cW+'%;min-width:'+(cW>0?'6px':'0')+'"></div><div class="breakdown-bar-seg bb-net" style="width:'+nW+'%;min-width:'+(nW>0?'6px':'0')+'"></div></div><div class="breakdown-bar-legend"><span><span class="bb-dot" style="background:#b83228"></span>Mortgage payoff '+fmt(R.payoff)+' ('+pW+'%)</span><span><span class="bb-dot" style="background:#c8a96e"></span>Costs &amp; fees '+fmt(R.totalCosts)+' ('+cW+'%)</span><span><span class="bb-dot" style="background:#1a7a5e"></span>Net to you '+fmt(Math.max(0,R.netAtClose))+' ('+nW+'%)</span></div>';
   const cgRow=R.cgTax>0?'<div class="brow"><span class="bl">Capital gains tax ('+Math.round(S.cgRate)+'%)</span><span class="bv r">\u2212'+fmt(R.cgTax)+'</span></div>':'';
   const concRow=S.concessions>0?'<div class="brow"><span class="bl">Seller concessions</span><span class="bv r">\u2212'+fmt(S.concessions)+'</span></div>':'';
   const otherRow=S.otherAdj>0?'<div class="brow"><span class="bl">Other closing adjustments</span><span class="bv r">\u2212'+fmt(S.otherAdj)+'</span></div>':'';
@@ -830,6 +925,47 @@ function copyResults(){
   document.getElementById('results-wrapper').style.display='none';
   document.getElementById('no-data-state').style.display='block';
 })();
+
+// ── FIX #4: toggle advanced basic inputs ──
+function toggleAdvancedBasic(){
+  const t=document.getElementById('adv-basic-toggle');
+  const c=document.getElementById('adv-basic-content');
+  const o=c.classList.contains('open');
+  t.classList.toggle('open',!o);
+  c.classList.toggle('open',!o);
+}
+
+// ── FIX #1: Tooltip toggle (click for mobile, hover handled by CSS on desktop) ──
+function toggleTip(btn){
+  const box=btn.nextElementSibling;
+  const isOpen=box.classList.contains('open');
+  // Close all open tooltips first
+  document.querySelectorAll('.tooltip-box.open').forEach(t=>{
+    t.classList.remove('open');
+    t.previousElementSibling.setAttribute('aria-expanded','false');
+  });
+  if(!isOpen){
+    box.classList.add('open');
+    btn.setAttribute('aria-expanded','true');
+    // Close on outside click
+    setTimeout(()=>{
+      function outsideClick(e){
+        if(!btn.contains(e.target)&&!box.contains(e.target)){
+          box.classList.remove('open');
+          btn.setAttribute('aria-expanded','false');
+          document.removeEventListener('click',outsideClick);
+        }
+      }
+      document.addEventListener('click',outsideClick);
+    },10);
+  }
+}
+
+// helper to make an info icon HTML string
+function infoIcon(tip){
+  return '<span class="info-wrap"><button class="info-btn" aria-label="Learn more" aria-expanded="false" onclick="toggleTip(this)">?</button><div class="tooltip-box" role="tooltip">'+tip+'</div></span>';
+}
+
 </script>
 </body>
 </html>
