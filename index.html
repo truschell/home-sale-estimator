@@ -235,14 +235,28 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
       </div>
       <div class="input-group">
         <label>Down Payment (%)</label>
-        <input type="text" id="down" value="20%" placeholder="20%" onblur="fmtPctField(this);updateDownComputed();recalculate()" oninput="updateDownComputed();recalculate()">
+        <input type="text" id="down" value="20%" placeholder="20%" onblur="fmtPctField(this);onAnyInputChange()" oninput="onAnyInputChange()">
         <div id="down-computed" style="font-size:11px;color:var(--ink3);margin-top:3px;font-family:'DM Mono',monospace"></div>
         <span class="hint">% of purchase price</span>
       </div>
       <div class="input-group">
         <label>Purchase Month</label>
-        <input type="month" id="purchaseDate" onchange="recalculate()">
+        <input type="month" id="purchaseDate" onchange="onAnyInputChange()">
         <span class="hint">Used for the 2-year capital gains exclusion check</span>
+      </div>
+      <div class="input-group">
+        <label>Interest Rate (%)</label>
+        <input type="text" id="rate" value="6%" placeholder="6%" onblur="fmtPctField(this);onAnyInputChange()" oninput="onAnyInputChange()">
+        <span class="hint">Annual rate on mortgage</span>
+      </div>
+      <div class="input-group">
+        <label>Current Mortgage Balance</label>
+        <input type="text" id="balance" value="" class="auto-val" placeholder="auto-calculated" onblur="fmtDollarField(this)" oninput="onBalanceManualEdit()">
+        <span class="auto-badge" id="balance-badge">Auto-calculated</span>
+        <span class="override-link" id="balance-override" onclick="unlockBalance()">Override manually</span>
+        <span class="override-link" id="balance-reset" onclick="resetBalance()" style="display:none">&#8635; Reset to auto</span>
+        <div class="pmi-badge" id="pmi-badge">&#9888; <span id="pmi-badge-text"></span></div>
+        <span class="hint" id="balance-hint">Estimated from purchase date, rate &amp; term</span>
       </div>
       <div class="input-group">
         <label>Target Sale Month</label>
@@ -253,17 +267,6 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
         <label>Months Until Sale</label>
         <input type="number" id="months" value="12" min="0" max="240" step="1" oninput="onMonthsManualEdit();recalculate()">
         <span class="hint">Or type directly — updates the month above</span>
-      </div>
-      <div class="input-group">
-        <label>Current Mortgage Balance</label>
-        <input type="text" id="balance" value="" class="auto-val" placeholder="auto-calculated" onblur="fmtDollarField(this)" oninput="S.balanceAuto=false;this.classList.remove('auto-val');onAnyInputChange()">
-        <div class="pmi-badge" id="pmi-badge">&#9888; <span id="pmi-badge-text"></span></div>
-        <span class="hint">Today's actual payoff amount</span>
-      </div>
-      <div class="input-group">
-        <label>Interest Rate (%)</label>
-        <input type="text" id="rate" value="6%" placeholder="6%" onblur="fmtPctField(this)" oninput="onAnyInputChange()">
-        <span class="hint">Annual rate on mortgage</span>
       </div>
     </div>
     <div class="collapsible-toggle open" id="adv-toggle" onclick="toggleAdvanced()">
@@ -356,11 +359,12 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
     <div class="metrics" id="metrics" style="margin-top:1.5rem"></div>
     <div class="section-label">Fine-tune assumptions</div>
     <div class="panel">
-      <div class="slider-row">
+      <div class="slider-row" id="fv-slider-row">
         <div class="slider-label">Sale price</div>
         <div class="slider-track"><input type="range" id="fv-range" min="50000" max="2000000" step="1000" value="300000" oninput="syncSlider('fv',this.value)"></div>
         <input type="text" class="sval-input" id="fv-text" value="$0" onchange="syncText('fv',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
       </div>
+      <div id="fv-hint" style="display:none;font-size:12px;color:var(--amber);background:var(--amber-bg);border:1.5px solid rgba(154,104,0,.2);border-radius:8px;padding:6px 12px;margin-top:6px;">Enter your <strong>Current Estimated Value</strong> above to set a sale price, or drag the slider manually.</div>
       <div class="appr-suggest-strip" id="appr-suggest-strip" style="display:none">
         <div class="appr-strip-text" id="appr-strip-text"></div>
         <button class="appr-strip-btn" onclick="useApprSuggest()">Use &#8594;</button>
@@ -421,7 +425,7 @@ function validate(){
   const pEl=document.getElementById('purchase'),rEl=document.getElementById('rate');
   pEl.classList.toggle('input-error',S.purchase<=0);
   rEl.classList.toggle('input-error',S.rate<=0);
-  if(S.purchase<=0)issues.push('Purchase price is required');
+  if(S.purchase<=0){issues.push('Purchase price is required');S.fv=0;}
   if(S.rate<=0)issues.push('Interest rate is required');
   const banner=document.getElementById('validation-banner'),list=document.getElementById('validation-list');
   if(issues.length){banner.classList.add('show');list.innerHTML=issues.map(i=>'<li>'+i+'</li>').join('');document.getElementById('results-wrapper').style.display='none';document.getElementById('no-data-state').style.display='block';return false;}
@@ -469,7 +473,7 @@ function updateApprSuggest(){
   const r=parsePct(document.getElementById('apprRate').value)/100;
   const mo=+document.getElementById('months').value||0;
   const rd=parsePct(document.getElementById('apprRate').value);
-  if(cv>0&&S.fv===0){S.fv=cv;const nm=Math.max(2000000,Math.round(cv*2.5/100000)*100000);document.getElementById('fv-range').max=nm;document.getElementById('fv-range').value=S.fv;document.getElementById('fv-text').value=formatSval('fv',S.fv);}
+  if(cv>0&&S.fv===0&&S.purchase>0){S.fv=cv;const nm=Math.max(2000000,Math.round(cv*2.5/100000)*100000);document.getElementById('fv-range').max=nm;document.getElementById('fv-range').value=S.fv;document.getElementById('fv-text').value=formatSval('fv',S.fv);}
   const strip=document.getElementById('appr-suggest-strip');
   if(cv>0&&mo>0&&r>0){suggestedFV=Math.round(cv*Math.pow(1+r,mo/12)/1000)*1000;strip.style.display='flex';document.getElementById('appr-strip-text').innerHTML='At <strong>'+rd+'%/yr</strong> over <strong>'+mo+' month'+(mo!==1?'s':'')+'</strong>, projected value: <strong>'+fmt(suggestedFV)+'</strong>';}
   else{suggestedFV=0;strip.style.display='none';}
@@ -479,10 +483,69 @@ function getDownDollars(){return Math.round(parseDollar(document.getElementById(
 function updateDownComputed(){const d=getDownDollars();document.getElementById('down-computed').innerHTML=d>0?'= '+fmtD(d)+' cash at purchase':'';}
 function calcAutoPayment(){const p=parseDollar(document.getElementById('purchase').value),dn=getDownDollars(),r=parsePct(document.getElementById('rate').value),t=+document.getElementById('loanTerm').value,loan=p-dn,mr=r/100/12;if(mr>0&&t>0&&loan>0)return Math.round(loan*(mr*Math.pow(1+mr,t))/(Math.pow(1+mr,t)-1));return null;}
 function onAnyInputChange(){updateDownComputed();if(S.balanceAuto)refreshAutoBalance();if(S.pmtAuto)refreshAutoPayment();onExtraInput();updateApprSuggest();recalculate();}
-function refreshAutoBalance(){const p=parseDollar(document.getElementById('purchase').value),d=getDownDollars(),loan=p-d;if(loan>0){const el=document.getElementById('balance');el.value=fmtD(Math.round(loan));el.classList.add('auto-val');}}
+function refreshAutoBalance(){
+  const p=parseDollar(document.getElementById('purchase').value);
+  const d=getDownDollars();
+  const loan=p-d;
+  if(loan<=0)return;
+  const r=parsePct(document.getElementById('rate').value);
+  const pmt=calcAutoPayment()||0;
+  const elapsed=elapsedMonths();
+  const currentBal=(elapsed>0&&pmt>0)?amortize(loan,r,pmt,elapsed,0):loan;
+  const el=document.getElementById('balance');
+  el.value=fmtD(Math.round(currentBal));
+  el.classList.add('auto-val');
+  el.setAttribute('readonly','');
+  document.getElementById('balance-badge').style.display='inline-block';
+  document.getElementById('balance-override').style.display='inline-block';
+  const balHint=document.getElementById('balance-hint');
+  if(balHint){
+    if(elapsed>0&&pmt>0){
+      balHint.textContent='Est. after '+elapsed+' mo. of payments from '+
+        (document.getElementById('purchaseDate').value
+          ? labelFrom(document.getElementById('purchaseDate').value)
+          : 'purchase');
+    } else {
+      balHint.textContent='Original loan amount — enter purchase month to auto-amortize';
+    }
+  }
+}
 function refreshAutoPayment(){const a=calcAutoPayment();if(a){const el=document.getElementById('pmt');el.value=fmtD(a);el.setAttribute('readonly','');el.classList.add('auto-val');document.getElementById('pmt-badge').style.display='inline-block';document.getElementById('pmt-override').style.display='inline-block';}}
 function onPmtManualEdit(){S.pmtAuto=false;document.getElementById('pmt-badge').style.display='none';document.getElementById('pmt-override').style.display='none';recalculate();}
 function unlockPmt(){S.pmtAuto=false;const el=document.getElementById('pmt');el.removeAttribute('readonly');el.classList.remove('auto-val');document.getElementById('pmt-badge').style.display='none';document.getElementById('pmt-override').style.display='none';el.focus();el.select();}
+function onBalanceManualEdit(){
+  S.balanceAuto=false;
+  document.getElementById('balance').classList.remove('auto-val');
+  document.getElementById('balance-badge').style.display='none';
+  document.getElementById('balance-override').style.display='none';
+  document.getElementById('balance-reset').style.display='inline-block';
+  const hint=document.getElementById('balance-hint');
+  if(hint)hint.textContent='Manually entered — click “Reset to auto” to recalculate';
+  recalculate();
+}
+function unlockBalance(){
+  S.balanceAuto=false;
+  const el=document.getElementById('balance');
+  el.removeAttribute('readonly');
+  el.classList.remove('auto-val');
+  document.getElementById('balance-badge').style.display='none';
+  document.getElementById('balance-override').style.display='none';
+  document.getElementById('balance-reset').style.display='inline-block';
+  const hint=document.getElementById('balance-hint');
+  if(hint)hint.textContent='Manually entered — click “Reset to auto” to recalculate';
+  el.focus();el.select();
+}
+function resetBalance(){
+  S.balanceAuto=true;
+  const el=document.getElementById('balance');
+  el.classList.add('auto-val');
+  el.setAttribute('readonly','');
+  document.getElementById('balance-badge').style.display='inline-block';
+  document.getElementById('balance-override').style.display='inline-block';
+  document.getElementById('balance-reset').style.display='none';
+  refreshAutoBalance();
+  recalculate();
+}
 function onExtraInput(){
   const extra=parseDollar(document.getElementById('extraPmt').value),bal=parseDollar(document.getElementById('balance').value),r=parsePct(document.getElementById('rate').value),p=parseDollar(document.getElementById('pmt').value),mo=+document.getElementById('months').value||12;
   const badge=document.getElementById('extra-savings');
@@ -540,7 +603,7 @@ function calc(monthsOv,fvOv){
 }
 function formatSval(key,val){const n=parseFloat(val);if(key==='fv')return '$'+Math.round(n).toLocaleString('en-US');if(key==='prep')return n.toFixed(2).replace(/\.?0+$/,'')+'%';if(key==='cost')return n.toFixed(1)+'%';if(key==='cg')return Math.round(n)+'%';return n;}
 function parseSval(key,str){return parseFloat(String(str).replace(/[$%,]/g,''))||0;}
-function syncSlider(key,val){const n=parseFloat(val);document.getElementById(key+'-text').value=formatSval(key,n);applySliderVal(key,n);update();}
+function syncSlider(key,val){const n=parseFloat(val);document.getElementById(key+'-text').value=formatSval(key,n);if(key==='fv')showSalePricePlaceholder(false);applySliderVal(key,n);update();}
 function syncText(key,str){let n=parseSval(key,str);if(key==='cg')n=Math.min(20,Math.max(0,n));if(key==='cost')n=Math.min(10,Math.max(0,n));document.getElementById(key+'-range').value=n;document.getElementById(key+'-text').value=formatSval(key,n);applySliderVal(key,n);update();}
 function applySliderVal(key,n){if(key==='fv')S.fv=n;if(key==='cost')S.costPct=n;if(key==='prep')S.prep=n;if(key==='cg')S.cgRate=n;updateCompare();}
 function updateCompare(){
@@ -610,11 +673,32 @@ function recalculate(){
   S.purchaseDate=document.getElementById('purchaseDate').value;
   S.filingStatus=document.getElementById('filingStatus').value;
   if(!validate())return;
-  const slMax=Math.max(2000000,Math.round((S.currentVal||S.purchase)*2.5/100000)*100000);
+  // Reset fv if purchase was cleared or fv is implausibly low/zero
+  // Only seed sale price from an explicit user-entered current value.
+  // Never guess from purchase price — leave blank so user must provide it.
+  if(S.fv===0&&S.currentVal>0){
+    S.fv=S.currentVal;
+    document.getElementById('fv-range').value=S.fv;
+    document.getElementById('fv-text').value=formatSval('fv',S.fv);
+  }
+  const slMax=Math.max(2000000,Math.round(Math.max(S.currentVal,S.purchase)*2.5/100000)*100000);
   document.getElementById('fv-range').max=slMax;
-  if(S.fv===0||S.fv<S.purchase*.3){S.fv=Math.round((S.currentVal||S.purchase*1.1)/1000)*1000;document.getElementById('fv-range').value=S.fv;document.getElementById('fv-text').value=formatSval('fv',S.fv);}
+  // If still no fv, show placeholder and skip update
+  if(S.fv===0){
+    document.getElementById('fv-text').value='';
+    document.getElementById('fv-range').value=document.getElementById('fv-range').min;
+    showSalePricePlaceholder(true);
+    return;
+  }
+  showSalePricePlaceholder(false);
   const saleYM=document.getElementById('saleMonth').value;buildLaterDropdown(saleYM);
   update();
+}
+function showSalePricePlaceholder(show){
+  const row=document.getElementById('fv-slider-row');
+  const hint=document.getElementById('fv-hint');
+  if(row)row.style.opacity=show?'0.4':'1';
+  if(hint){hint.style.display=show?'block':'none';}
 }
 function update(){
   const R=calc();
