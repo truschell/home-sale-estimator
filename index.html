@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home Sale Estimator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1a7a5e;--green-bg:#e8f5f1;--green-mid:#2da882;
+  --red:#b83228;--red-bg:#fdf0ee;
+  --blue:#1a5a8a;--blue-bg:#e8f2fa;
+  --amber:#9a6800;--amber-bg:#fff8e6;
+  --ink:#18181a;--ink2:#44444a;--ink3:#888892;
+  --paper:#f6f4ef;--paper2:#eceae3;--paper3:#dedad1;
+  --white:#ffffff;--accent:#c8a96e;--border:rgba(0,0,0,0.08);
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+  --shadow-md:0 2px 8px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.06);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+
+/* ── Header ── */
+header{background:var(--ink);color:var(--white);padding:3rem 2.5rem 2.5rem;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;top:-80px;right:-80px;width:280px;height:280px;border:1px solid rgba(200,169,110,.15);border-radius:50%}
+header::after{content:'';position:absolute;top:-30px;right:-30px;width:150px;height:150px;border:1px solid rgba(200,169,110,.1);border-radius:50%}
+header .header-inner{position:relative;z-index:1;max-width:860px;margin:0 auto}
+.eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem;display:flex;align-items:center;gap:8px}
+.eyebrow::before{content:'';display:block;width:20px;height:1px;background:var(--accent);opacity:.6}
+header h1{font-family:'DM Serif Display',serif;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:400;line-height:1.15;margin-bottom:.4rem;letter-spacing:-.01em}
+header p{font-size:13px;color:rgba(255,255,255,.4);font-weight:300;letter-spacing:.01em}
+
+/* ── Layout ── */
+main{max-width:860px;margin:0 auto;padding:2rem 1.5rem 5rem}
+.section-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--paper3)}
+.panel{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:1.75rem;margin-bottom:2rem;box-shadow:var(--shadow)}
+
+/* ── Results divider ── */
+.results-divider{display:flex;align-items:center;gap:12px;margin:2.5rem 0 2rem;padding:0 .25rem}
+.results-divider span:first-child{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:400;color:var(--ink);white-space:nowrap}
+.results-divider::before{content:'';flex:1;height:1.5px;background:var(--paper3)}
+.results-divider::after{content:'';flex:1;height:1.5px;background:var(--paper3)}
+.results-live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:livepulse 2.5s infinite}
+@keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+
+/* ── Inputs ── */
+.inputs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:1.1rem}
+.full-width{grid-column:1/-1}
+.input-group{display:flex;flex-direction:column;gap:5px}
+.input-group label{font-size:10px;color:var(--ink3);letter-spacing:.06em;font-weight:500;text-transform:uppercase}
+.input-group input,.input-group select{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--ink);background:var(--paper);border:1.5px solid var(--paper3);border-radius:10px;padding:.65rem .8rem;outline:none;transition:all .2s;width:100%}
+.input-group input.auto-val{color:var(--ink3);font-style:italic}
+.input-group input.auto-val:focus{color:var(--ink);font-style:normal}
+.input-group input[type=text].addr{font-family:'DM Sans',sans-serif;font-size:14px}
+.input-group input:focus,.input-group select:focus{border-color:var(--accent);background:var(--white);box-shadow:0 0 0 3px rgba(200,169,110,.12)}
+.input-group input::placeholder{color:var(--ink3);opacity:.5;font-style:italic}
+.input-group input[readonly]{color:var(--ink3);background:var(--paper2);cursor:default}
+.input-group .hint{font-size:11px;color:var(--ink3);font-weight:300;line-height:1.5}
+.input-group.hidden{display:none}
+.auto-badge{font-size:10px;background:var(--green-bg);color:var(--green);border-radius:4px;padding:2px 7px;font-weight:500;display:none;width:fit-content}
+.override-link{font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline;display:none}
+
+/* ── Property links ── */
+.prop-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:.75rem}
+.prop-link{font-size:12px;font-weight:500;padding:5px 14px;border-radius:20px;border:1.5px solid var(--paper3);background:var(--white);color:var(--ink2);text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:5px;box-shadow:var(--shadow)}
+.prop-link:hover{border-color:var(--accent);color:var(--ink);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+
+/* ── PMI & savings badges ── */
+.pmi-badge{display:none;align-items:center;gap:6px;background:var(--amber-bg);border:1.5px solid rgba(154,104,0,.2);border-radius:8px;padding:4px 11px;font-size:12px;color:var(--amber);font-weight:500;margin-top:5px;width:fit-content}
+.savings-badge{display:none;align-items:center;background:var(--green-bg);border:1.5px solid rgba(26,122,94,.2);border-radius:8px;padding:4px 11px;font-size:12px;color:var(--green);font-weight:500;margin-top:5px;width:fit-content}
+
+/* ── Collapsible ── */
+.collapsible-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:.85rem 0;margin-top:.5rem;border-top:1px dashed var(--paper3);user-select:none}
+.collapsible-toggle .ct-label{font-size:12px;font-weight:500;color:var(--ink3);display:flex;align-items:center;gap:6px}
+.collapsible-toggle .ct-label::before{content:'';display:block;width:14px;height:1px;background:var(--paper3)}
+.collapsible-toggle .ct-chevron{font-size:11px;color:var(--ink3);transition:transform .2s}
+.collapsible-toggle.open .ct-chevron{transform:rotate(180deg)}
+.collapsible-content{display:none}
+.collapsible-content.open{display:contents}
+
+/* ── Buttons ── */
+.btn-row{display:flex;gap:10px;margin-top:1.5rem;flex-wrap:wrap}
+.btn{padding:.7rem 1.5rem;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;letter-spacing:.02em;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--ink);color:var(--white);box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.btn-primary:hover{background:var(--green);box-shadow:0 4px 12px rgba(26,122,94,.3)}
+.btn-secondary{background:var(--paper2);color:var(--ink2);border:1.5px solid var(--paper3)}
+.btn-secondary:hover{background:var(--paper3)}
+.btn-blue{background:var(--blue-bg);color:var(--blue);border:1.5px solid rgba(26,90,138,.2)}
+.btn-blue:hover{background:#cce3f5}
+.btn:active{transform:scale(.97)}
+.btn.success{background:var(--green) !important;color:var(--white) !important}
+
+/* ── Metrics ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:2rem}
+.metric-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:1.25rem 1.1rem;transition:all .2s;box-shadow:var(--shadow)}
+.metric-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.metric-card .lbl{font-size:10px;color:var(--ink3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.metric-card .val{font-family:'DM Serif Display',serif;font-size:1.55rem;font-weight:400;color:var(--ink);line-height:1}
+.metric-card .val.g{color:var(--green)}
+.metric-card .val.r{color:var(--red)}
+.metric-card .sub{font-size:11px;color:var(--ink3);margin-top:5px}
+
+/* ── Equity bar ── */
+.equity-bar-track{height:10px;background:var(--paper3);border-radius:5px;overflow:hidden;margin:10px 0 8px}
+.equity-bar-fill{height:100%;background:linear-gradient(90deg,#1a7a5e,#2da882,#45c9a0);border-radius:5px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.equity-bar-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--ink3)}
+.equity-bar-labels span{font-family:'DM Mono',monospace;font-weight:500}
+
+/* ── Break-even ── */
+.breakeven{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:1.1rem 1.4rem;margin-bottom:2rem;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
+.breakeven-icon{font-size:24px;flex-shrink:0}
+.breakeven-text .lbl{font-size:10px;color:var(--ink3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.breakeven-text .val{font-family:'DM Serif Display',serif;font-size:1.5rem;font-weight:400;color:var(--blue)}
+.breakeven-text .sub{font-size:12px;color:var(--ink3);margin-top:3px}
+
+/* ── Sliders ── */
+.slider-row{display:flex;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid var(--paper2)}
+.slider-row:last-child{border-bottom:none;padding-bottom:0}
+.slider-row:first-child{padding-top:0}
+.slider-label{font-size:13px;color:var(--ink2);min-width:178px;flex-shrink:0;line-height:1.3}
+.slider-label small{display:block;font-size:11px;color:var(--ink3);font-weight:300;margin-top:2px}
+.slider-track{flex:1;display:flex;align-items:center}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:4px;background:var(--paper3);border-radius:2px;outline:none;cursor:pointer;touch-action:pan-x}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--white);border:2px solid var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer;transition:all .2s}
+input[type=range]::-webkit-slider-thumb:hover{background:var(--green);border-color:var(--green);box-shadow:0 2px 8px rgba(26,122,94,.35)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--white);border:2px solid var(--ink);cursor:pointer}
+.sval-input{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--ink);background:var(--paper);border:1.5px solid var(--paper3);border-radius:8px;padding:5px 9px;width:92px;text-align:right;outline:none;transition:all .2s;flex-shrink:0}
+.sval-input:focus{border-color:var(--accent);background:var(--white);box-shadow:0 0 0 3px rgba(200,169,110,.12)}
+
+/* ── Appreciation strip ── */
+.appr-suggest-strip{display:flex;align-items:center;gap:10px;background:var(--blue-bg);border:1.5px solid rgba(26,90,138,.2);border-radius:10px;padding:.65rem 1rem;margin-top:.75rem;flex-wrap:wrap}
+.appr-strip-text{font-size:13px;color:var(--blue);flex:1;min-width:0}
+.appr-strip-text strong{font-weight:500}
+.appr-strip-btn{font-size:12px;font-weight:500;padding:5px 12px;border-radius:7px;border:1.5px solid rgba(26,90,138,.3);background:var(--white);color:var(--blue);cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.appr-strip-btn:hover{background:var(--blue);color:var(--white)}
+
+/* ── Notes ── */
+.note-box{border-radius:10px;padding:.8rem 1.1rem;font-size:12px;line-height:1.65;margin-top:1rem}
+.note-box strong{font-weight:500}
+.note-amber{background:var(--amber-bg);border:1.5px solid rgba(154,104,0,.2);color:#6b4a00}
+.note-green{background:var(--green-bg);border:1.5px solid rgba(26,122,94,.2);color:#0f5040}
+.note-red{background:var(--red-bg);border:1.5px solid rgba(192,57,43,.2);color:#7a1f14}
+.note-blue{background:var(--blue-bg);border:1.5px solid rgba(26,90,138,.2);color:#0f3d62}
+
+/* ── Breakdown ── */
+.brow{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;font-size:14px;border-bottom:1px solid var(--paper2)}
+.brow:last-child{border-bottom:none}
+.brow .bl{color:var(--ink2)}
+.brow .bv{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
+.brow .bv.r{color:var(--red)}
+.brow .bv.g{color:var(--green)}
+.trow{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0 7px;font-size:15px;font-weight:500}
+.trow .tv{font-family:'DM Serif Display',serif;font-size:1.35rem;font-weight:400}
+.trow .tv.g{color:var(--green)}
+.trow .tv.r{color:var(--red)}
+hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
+
+/* ── Visual breakdown bar ── */
+.breakdown-bar{height:10px;border-radius:5px;overflow:hidden;display:flex;margin:1rem 0 1.5rem;gap:2px}
+.breakdown-bar-seg{height:100%;border-radius:3px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.bb-payoff{background:var(--red)}
+.bb-costs{background:var(--accent)}
+.bb-net{background:var(--green)}
+.breakdown-bar-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--ink3);margin-bottom:1rem}
+.breakdown-bar-legend span{display:flex;align-items:center;gap:5px}
+.bb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── Export ── */
+.export-bar{display:flex;gap:8px;margin-bottom:2rem;flex-wrap:wrap}
+.footnote{font-size:11px;color:var(--ink3);line-height:1.8;padding:0 .25rem;max-width:680px}
+
+/* ── Tablet ── */
+@media(max-width:780px){
+  .inputs-grid{grid-template-columns:repeat(2,1fr)}
+  .metrics{grid-template-columns:repeat(3,1fr)}
+}
+
+/* ── Mobile ── */
+@media(max-width:640px){
+  header{padding:1.75rem 1.25rem 1.5rem}
+  header h1{font-size:1.8rem}
+  main{padding:1.25rem .9rem 4rem}
+  .panel{padding:1.1rem 1rem}
+  .inputs-grid{grid-template-columns:1fr}
+  .full-width{grid-column:auto}
+  .metrics{grid-template-columns:repeat(2,1fr);gap:8px}
+  .metric-card{padding:1rem .85rem}
+  .metric-card .val{font-size:1.3rem}
+  .slider-row{flex-wrap:wrap;gap:6px;padding:11px 0}
+  .slider-label{min-width:100%;font-size:13px;margin-bottom:2px}
+  .sval-input{width:82px;font-size:12px}
+  .brow{font-size:13px}
+  .brow .bl{max-width:60%;line-height:1.35}
+  .trow{font-size:14px}
+  .trow .tv{font-size:1.15rem}
+  .breakeven{padding:.9rem 1rem}
+  .breakeven-text .val{font-size:1.25rem}
+  .btn-row{flex-direction:column;gap:8px}
+  .btn-row .btn{justify-content:center;padding:.75rem 1rem}
+  .export-bar{flex-direction:column;gap:8px}
+  .export-bar .btn{justify-content:center}
+  .prop-links{gap:6px}
+  .prop-link{font-size:11px;padding:5px 10px}
+  .note-box{font-size:12px;padding:.7rem .9rem}
+  .btn,.prop-link{min-height:44px}
+  input[type=range]::-webkit-slider-thumb{width:26px;height:26px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="eyebrow">Home Sale Estimator</div>
+    <h1>What will I walk<br>away with?</h1>
+    <p>Enter your home details and instantly see what you'd walk away with.</p>
+  </div>
+</header>
+<main>
+
+
+
+  <div class="section-label">Your home</div>
+  <div class="panel">
+
+    <!-- Property subsection -->
+    <div class="inputs-grid">
+      <div class="input-group full-width">
+        <label>Property Address</label>
+        <input type="text" id="address" class="addr" placeholder="e.g. 123 Main St, City, State ZIP" oninput="updatePropLinks()">
+        <span class="hint">Used for property value lookup links and the net sheet PDF</span>
+      </div>
+      <div class="input-group">
+        <label>Current Estimated Value ($)</label>
+        <input type="text" id="currentVal" value="" placeholder="e.g. $320,000" onblur="fmtDollarField(this)" oninput="updateApprSuggest();recalculate()">
+        <span class="hint">Your Zestimate, Redfin estimate, or own assessment</span>
+      </div>
+      <div class="input-group">
+        <label>Expected Annual Growth (%)</label>
+        <input type="text" id="apprRate" value="3%" placeholder="3%" onblur="fmtPctField(this);updateApprSuggest()" oninput="updateApprSuggest()">
+        <span class="hint">Used to suggest a future sale price. Nat'l avg ~3–4%/yr.</span>
+      </div>
+    </div>
+    <!-- Property lookup links -->
+    <div id="prop-links-section" style="display:none;margin-top:1rem;margin-bottom:1.25rem">
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:.5rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em">Look up value on</div>
+      <div class="prop-links" id="prop-links"></div>
+    </div>
+
+    <!-- Divider between property and mortgage -->
+    <div style="border-top:1.5px dashed var(--paper3);margin:1.5rem 0"></div>
+
+    <div class="inputs-grid">
+      <div class="input-group">
+        <label>Purchase Price</label>
+        <input type="text" id="purchase" value="$300,000" placeholder="$300,000" onblur="fmtDollarField(this)" oninput="onAnyInputChange();recalculate()">
+        <span class="hint">Original price paid</span>
+      </div>
+      <div class="input-group">
+        <label>Down Payment (%)</label>
+        <input type="text" id="down" value="20%" placeholder="20%" onblur="fmtPctField(this);updateDownComputed();recalculate()" oninput="updateDownComputed();recalculate()">
+        <div class="down-computed" id="down-computed" style="font-size:11px;color:var(--ink3);margin-top:3px;font-family:'DM Mono',monospace"></div>
+        <span class="hint">% of purchase price</span>
+      </div>
+      <div class="input-group">
+        <label>Purchase Date</label>
+        <input type="month" id="purchaseDate" value="2026-04" onchange="recalculate()">
+        <span class="hint">Used for the 2-year capital gains exclusion check</span>
+      </div>
+      <div class="input-group">
+        <label>Current Mortgage Balance</label>
+        <input type="text" id="balance" value="$240,000" class="auto-val" placeholder="$240,000" onblur="fmtDollarField(this)" oninput="S.balanceAuto=false;this.classList.remove('auto-val');onAnyInputChange();recalculate()">
+        <div class="pmi-badge" id="pmi-badge">⚠ <span id="pmi-badge-text"></span></div>
+        <span class="hint">Today's actual payoff — extra payments apply from this balance forward</span>
+      </div>
+      <div class="input-group">
+        <label>Interest Rate (%)</label>
+        <input type="text" id="rate" value="6%" placeholder="6%" onblur="fmtPctField(this)" oninput="onAnyInputChange();recalculate()">
+        <span class="hint">Annual rate on mortgage</span>
+      </div>
+      <div class="input-group">
+        <label>Months Until Sale</label>
+        <input type="number" id="months" value="0" min="1" max="120" step="1" oninput="onExtraInput();updateApprSuggest();recalculate()">
+        <span class="hint">How far out are you planning to sell?</span>
+      </div>
+    </div>
+
+    <!-- Collapsible additional details -->
+    <div class="collapsible-toggle" id="adv-toggle" onclick="toggleAdvanced()">
+      <div class="ct-label">Loan details</div>
+      <span class="ct-chevron">▼</span>
+    </div>
+    <div class="collapsible-content" id="adv-content">
+      <div class="inputs-grid" style="margin-top:.75rem">
+        <div class="input-group">
+          <label>Original Loan Term</label>
+          <select id="loanTerm" onchange="onAnyInputChange();recalculate()">
+            <option value="360" selected>30 years</option>
+            <option value="180">15 years</option>
+            <option value="240">20 years</option>
+            <option value="120">10 years</option>
+          </select>
+          <span class="hint">Used to auto-calculate payment</span>
+        </div>
+        <div class="input-group">
+          <label>Monthly P&amp;I Payment ($)</label>
+          <input type="text" id="pmt" value="$1,439" class="auto-val" placeholder="$1,439" onblur="fmtDollarField(this)" oninput="onPmtManualEdit()">
+          <span class="auto-badge" id="pmt-badge">Auto-calculated</span>
+          <span class="override-link" id="pmt-override" onclick="unlockPmt()">Override manually</span>
+          <span class="hint">Principal &amp; interest only (not escrow)</span>
+        </div>
+        <div class="input-group">
+          <label>Extra Monthly Principal ($)</label>
+          <input type="text" id="extraPmt" value="" placeholder="$0" onblur="fmtDollarField(this)" oninput="onExtraInput();recalculate()">
+          <div class="savings-badge" id="extra-savings"><span id="extra-savings-text"></span></div>
+          <span class="hint">Applied to future payments only — enter your current balance above to reflect past extra payments already made</span>
+        </div>
+        <div class="input-group">
+          <label>Monthly Tax &amp; Insurance ($)</label>
+          <input type="text" id="escrow" value="" placeholder="$0" onblur="fmtDollarField(this)">
+          <span class="hint">Property tax + insurance (escrow). Used in rent vs. sell tab.</span>
+        </div>
+        <div class="input-group">
+          <label>Filing Status</label>
+          <select id="filingStatus" onchange="recalculate()">
+            <option value="single">Single ($250k exclusion)</option>
+            <option value="married" selected>Married / Joint ($500k)</option>
+          </select>
+          <span class="hint">Affects capital gains exclusion limit</span>
+        </div>
+      </div>
+    </div>
+    <div style="height:.25rem"></div>
+  </div><!-- end your home panel -->
+
+<!-- ═══ Results ═══ -->
+<div class="results-divider">
+  <span>Your Estimate</span>
+  <span class="results-live-dot" id="results-live-dot"></span>
+</div>
+<div id="results-section">
+
+  <div class="panel" style="padding:1.25rem 1.5rem;margin-bottom:1.5rem">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+      <span style="font-size:13px;color:var(--ink2)">Your equity at time of sale</span>
+      <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500" id="equity-pct-label">—</span>
+    </div>
+    <div class="equity-bar-track"><div class="equity-bar-fill" id="equity-bar" style="width:0%"></div></div>
+    <div class="equity-bar-labels"><span id="equity-amt">—</span><span id="home-val-label">—</span></div>
+  </div>
+
+  <div class="breakeven">
+    <div class="breakeven-icon">⚖️</div>
+    <div class="breakeven-text">
+      <div class="lbl">Break-even sale price</div>
+      <div class="val" id="breakeven-val">—</div>
+      <div class="sub" id="breakeven-sub">Minimum to walk away at $0 net</div>
+    </div>
+  </div>
+
+  <div class="metrics" id="metrics" style="margin-top:1.5rem"></div>
+
+  <div class="section-label">Fine-tune assumptions</div>
+  <div class="panel">
+    <div class="slider-row">
+      <div class="slider-label">Future sale price</div>
+      <div class="slider-track">
+        <input type="range" id="fv-range" min="50000" max="2000000" step="1000" value="300000" oninput="syncSlider('fv',this.value)">
+      </div>
+      <input type="text" class="sval-input" id="fv-text" value="$0" onchange="syncText('fv',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+    </div>
+    <!-- Single appreciation suggestion -->
+    <div class="appr-suggest-strip" id="appr-suggest-strip" style="display:none">
+      <div class="appr-strip-text" id="appr-strip-text"></div>
+      <button class="appr-strip-btn" id="appr-strip-btn" onclick="useApprSuggest()">Use →</button>
+    </div>
+    <div class="slider-row">
+      <div class="slider-label">Selling costs<small>Agent commissions &amp; closing</small></div>
+      <div class="slider-track">
+        <input type="range" id="cost-range" min="0" max="10" step="0.5" value="6" oninput="syncSlider('cost',this.value)">
+      </div>
+      <input type="text" class="sval-input" id="cost-text" value="6.0%" onchange="syncText('cost',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+    </div>
+    <div class="slider-row">
+      <div class="slider-label">Prep costs<small>Staging, repairs, cleaning</small></div>
+      <div class="slider-track">
+        <input type="range" id="prep-range" min="0" max="5" step="0.25" value="1" oninput="syncSlider('prep',this.value)">
+      </div>
+      <input type="text" class="sval-input" id="prep-text" value="1.0%" onchange="syncText('prep',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+    </div>
+    <div class="slider-row">
+      <div class="slider-label">Capital gains rate<small>Long-term: 0%, 15%, or 20%</small></div>
+      <div class="slider-track">
+        <input type="range" id="cg-range" min="0" max="20" step="1" value="0" oninput="syncSlider('cg',this.value)">
+      </div>
+      <input type="text" class="sval-input" id="cg-text" value="0%" onchange="syncText('cg',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+    </div>
+    <div class="note-box note-green" id="cg-note"></div>
+  </div>
+
+  <div class="panel" id="breakdown" style="margin-top:0"></div>
+
+
+  <div class="export-bar">
+    <button class="btn btn-blue" id="pdf-btn" onclick="generateNetSheetPDF()">📄 Download Net Sheet PDF</button>
+    <button class="btn btn-secondary" id="copy-btn" onclick="copyResults()">📋 Copy Results</button>
+    <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
+  </div>
+
+</div><!-- end results-section -->
+
+
+<p class="footnote" style="margin-top:1rem">
+  Mortgage payoff projected by amortizing current balance forward at stated rate. Extra principal applied to future months only — enter your current balance to reflect any past extra payments already made. Capital gains estimated on gross profit above purchase price; IRS primary residence exclusion is $250k (single) or $500k (married) for homes owned &amp; used as primary residence 2 of the last 5 years. Net profit accounts for all interest paid from purchase through sale. Estimation only — consult a real estate attorney, CPA, or financial advisor.
+</p>
+</main>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+// ─────────────────────────────────────────
+// State
+// ─────────────────────────────────────────
+let S = {
+  address:'', currentVal:268000, apprRate:3,
+  purchase:300000, balance:240000, balanceAuto:true,
+  rate:6, pmt:1439, pmtAuto:true, escrow:0, loanTerm:360, pmiRate:0.008,
+  extraPmt:0, months:0, purchaseDate:'2026-04',
+  filingStatus:'married',
+  fv:0, costPct:6, prep:1, cgRate:0,
+};
+
+
+// ─────────────────────────────────────────
+// Formatters
+// ─────────────────────────────────────────
+const parseDollar = s => parseFloat(String(s).replace(/[$,\s]/g,''))||0;
+const parsePct    = s => parseFloat(String(s).replace(/[%\s]/g,''))||0;
+const fmtD  = n => '$'+Math.round(Math.abs(n)).toLocaleString('en-US');
+const fmt   = n => '$'+Math.round(Math.abs(n)).toLocaleString('en-US');
+const fmtSign = n => (n>=0?'+':'−')+fmt(n);
+const cc    = n => n>=0?'g':'r';
+function fmtDollarField(el){ el.value=fmtD(parseDollar(el.value)); }
+function fmtPctField(el){ el.value=parsePct(el.value)+'%'; }
+
+// ─────────────────────────────────────────
+// Property links
+// ─────────────────────────────────────────
+function updatePropLinks(){
+  const addr = document.getElementById('address').value.trim();
+  const sec  = document.getElementById('prop-links-section');
+  if(!addr){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  const enc = encodeURIComponent(addr);
+  document.getElementById('prop-links').innerHTML = `
+    <a class="prop-link" href="https://www.zillow.com/homes/${enc}_rb/" target="_blank">🏠 Zillow</a>
+    <a class="prop-link" href="https://www.redfin.com/search#location=${enc}" target="_blank">🔴 Redfin</a>
+    <a class="prop-link" href="https://www.google.com/search?q=${enc}+home+value+estimate" target="_blank">🔍 Google</a>
+  `;
+}
+
+// ─────────────────────────────────────────
+// Appreciation suggestion
+// ─────────────────────────────────────────
+let suggestedFV = 0;
+
+function updateApprSuggest(){
+  const currentVal = parseDollar(document.getElementById('currentVal').value);
+  const rate       = parsePct(document.getElementById('apprRate').value) / 100;
+  const months     = +document.getElementById('months').value || 0;
+  const yearsAhead = months / 12;
+  const rateDisplay= parsePct(document.getElementById('apprRate').value);
+
+  // Sync current estimate → sale price as default
+  if(currentVal > 0){
+    S.fv = currentVal;
+    document.getElementById('fv-range').value = S.fv;
+    document.getElementById('fv-text').value  = formatSval('fv', S.fv);
+  }
+
+  const strip = document.getElementById('appr-suggest-strip');
+  const stripText = document.getElementById('appr-strip-text');
+
+  // Only show suggestion if months > 0 and we have a value
+  if(currentVal > 0 && months > 0 && rate > 0){
+    suggestedFV = Math.round(currentVal * Math.pow(1 + rate, yearsAhead) / 1000) * 1000;
+    strip.style.display = 'flex';
+    stripText.innerHTML = `At <strong>${rateDisplay}%/yr</strong> over <strong>${months} month${months!==1?'s':''}</strong>, estimated value at sale: <strong>${fmt(suggestedFV)}</strong>`;
+  } else {
+    suggestedFV = 0;
+    strip.style.display = 'none';
+  }
+}
+
+function useApprSuggest(){
+  if(!suggestedFV) return;
+  S.fv = suggestedFV;
+  document.getElementById('fv-range').value = S.fv;
+  document.getElementById('fv-text').value  = formatSval('fv', S.fv);
+  update();
+}
+
+// ─────────────────────────────────────────
+// Down payment
+// ─────────────────────────────────────────
+function getDownDollars(){
+  const purchase=parseDollar(document.getElementById('purchase').value);
+  const pct=parsePct(document.getElementById('down').value);
+  return Math.round(purchase*pct/100);
+}
+function updateDownComputed(){
+  const purchase=parseDollar(document.getElementById('purchase').value);
+  const downD=getDownDollars();
+  const el=document.getElementById('down-computed');
+  el.innerHTML=downD>0?`= ${fmtD(downD)} cash at purchase`:'';
+}
+
+// ─────────────────────────────────────────
+// Payment auto-calc
+// ─────────────────────────────────────────
+function calcAutoPayment(){
+  const purchase=parseDollar(document.getElementById('purchase').value);
+  const down=getDownDollars();
+  const rate=parsePct(document.getElementById('rate').value);
+  const term=+document.getElementById('loanTerm').value;
+  const loan=purchase-down;
+  const r=rate/100/12;
+  if(r>0&&term>0&&loan>0) return Math.round(loan*(r*Math.pow(1+r,term))/(Math.pow(1+r,term)-1));
+  return null;
+}
+function onAnyInputChange(){
+  updateDownComputed();
+  if(S.balanceAuto) refreshAutoBalance();
+  if(S.pmtAuto) refreshAutoPayment();
+  onExtraInput();
+  updateApprSuggest();
+  
+}
+
+function refreshAutoBalance(){
+  const purchase = parseDollar(document.getElementById('purchase').value);
+  const down = getDownDollars();
+  const loan = purchase - down;
+  if(loan > 0){
+    const el = document.getElementById('balance');
+    el.value = fmtD(Math.round(loan));
+    el.classList.add('auto-val');
+  }
+}
+function refreshAutoPayment(){
+  const auto=calcAutoPayment();
+  if(auto){
+    const el=document.getElementById('pmt');
+    el.value=fmtD(auto);
+    el.setAttribute('readonly','');
+    el.classList.add('auto-val');
+    document.getElementById('pmt-badge').style.display='inline-block';
+    document.getElementById('pmt-override').style.display='inline-block';
+  }
+}
+function onPmtManualEdit(){
+  S.pmtAuto=false;
+  document.getElementById('pmt-badge').style.display='none';
+  document.getElementById('pmt-override').style.display='none';
+  
+}
+function unlockPmt(){
+  S.pmtAuto=false;
+  const el=document.getElementById('pmt');
+  el.removeAttribute('readonly');
+  el.classList.remove('auto-val');
+  document.getElementById('pmt-badge').style.display='none';
+  document.getElementById('pmt-override').style.display='none';
+  el.focus(); el.select();
+}
+
+// ─────────────────────────────────────────
+// Extra payment preview
+// ─────────────────────────────────────────
+function onExtraInput(){
+  const extra=parseDollar(document.getElementById('extraPmt').value);
+  const bal  =parseDollar(document.getElementById('balance').value);
+  const rate =parsePct(document.getElementById('rate').value);
+  const pmt  =parseDollar(document.getElementById('pmt').value);
+  const mo   =+document.getElementById('months').value||12;
+  const badge=document.getElementById('extra-savings');
+  if(extra<=0||bal<=0||rate<=0){badge.style.display='none';return;}
+  const saves=amortize(bal,rate,pmt,mo,0)-amortize(bal,rate,pmt,mo,extra);
+  if(saves>0){
+    badge.style.display='inline-flex';
+    document.getElementById('extra-savings-text').textContent=`Saves ${fmt(saves)} off payoff over ${mo} mo.`;
+  } else { badge.style.display='none'; }
+}
+
+// ─────────────────────────────────────────
+// Amortization
+// ─────────────────────────────────────────
+function amortize(bal,annualRate,pmt,months,extra){
+  if(bal<=0)return 0;
+  const r=annualRate/100/12; let b=bal;
+  for(let i=0;i<months;i++){
+    if(b<=0)break;
+    b=Math.max(0,b-((pmt-b*r)+(extra||0)));
+  }
+  return Math.round(b);
+}
+function projectPayoff(months){
+  return amortize(S.balance,S.rate,S.pmt,months,S.extraPmt);
+}
+
+// ─────────────────────────────────────────
+// Elapsed months
+// ─────────────────────────────────────────
+function elapsedMonths(){
+  if(!S.purchaseDate)return 0;
+  const[y,m]=S.purchaseDate.split('-').map(Number);
+  return Math.round((new Date()-new Date(y,m-1,1))/(1000*60*60*24*30.44));
+}
+
+// ─────────────────────────────────────────
+// Core calc
+// ─────────────────────────────────────────
+function calc(){
+  const payoff=projectPayoff(S.months);
+  const elapsed=elapsedMonths();
+  const totalMo=elapsed+S.months;
+  const loanAmt=Math.max(0,S.purchase-S.down);
+  const totalPrinPaid=Math.max(0,loanAmt-payoff);
+  const totalPmtsPaid=(S.pmt*elapsed)+((S.pmt+S.extraPmt)*S.months);
+  const totalIntPaid=Math.max(0,totalPmtsPaid-totalPrinPaid);
+  const sellingCosts=S.fv*S.costPct/100;
+  const prepDollars=S.fv*S.prep/100;
+  const grossGain=Math.max(0,S.fv-S.purchase);
+  const ownedMo=elapsed+S.months;
+  const qualifies=ownedMo>=24;
+  const exclusion=S.filingStatus==='married'?500000:250000;
+  const taxableGain=qualifies?Math.max(0,grossGain-exclusion):grossGain;
+  const cgTax=taxableGain*(S.cgRate/100);
+  const netAtClose=S.fv-sellingCosts-prepDollars-cgTax-payoff;
+  const totalCosts=sellingCosts+prepDollars+cgTax;
+  const netProfit=(S.fv-S.purchase)-sellingCosts-prepDollars-cgTax-totalIntPaid;
+  const equity=S.fv-payoff;
+  const c=S.costPct/100;
+  const payoffNoExtra=amortize(S.balance,S.rate,S.pmt,S.months,0);
+  const extraSavings=Math.max(0,payoffNoExtra-payoff);
+
+  // PMI — applies when LTV > 80%, cancels when balance reaches 80% of purchase price
+  const ltv = S.purchase>0?(S.purchase-S.down)/S.purchase:0;
+  const pmiThresholdBal = S.purchase * 0.80;
+  let totalPMI = 0;
+  if(ltv > 0.80){
+    // Calculate PMI month by month — stops when balance crosses 80% LTV
+    const r = S.rate / 100 / 12;
+    let b = S.balance;
+    const totalMoToCalc = elapsed + S.months;
+    for(let i = 0; i < totalMoToCalc; i++){
+      if(b <= pmiThresholdBal) break;
+      totalPMI += (b * S.pmiRate / 12);
+      b = Math.max(0, b - ((S.pmt - b * r) + S.extraPmt));
+    }
+  }
+  const hasPMI = ltv > 0.80;
+  const monthlyPMI = hasPMI ? Math.round(S.purchase * S.pmiRate / 12) : 0;
+  const netProfitWithPMI = netProfit - totalPMI;
+  const breakEven=Math.round((S.purchase+totalIntPaid+totalPMI)/(1-(S.costPct/100+S.prep/100)));
+
+  return{payoff,elapsed,totalMo,totalPrinPaid,totalIntPaid,totalPmtsPaid,
+    sellingCosts,prepDollars,grossGain,qualifies,exclusion,taxableGain,cgTax,
+    netAtClose,totalCosts,netProfit,equity,breakEven,ownedMo,extraSavings,
+    hasPMI,monthlyPMI,totalPMI,ltv,pmiThresholdBal,netProfitWithPMI};
+}
+
+
+// ─────────────────────────────────────────
+// Slider sync
+// ─────────────────────────────────────────
+function formatSval(key,val){
+  const n=parseFloat(val);
+  if(key==='fv')   return '$'+Math.round(n).toLocaleString('en-US');
+  if(key==='prep') return n.toFixed(2).replace(/\.?0+$/,'')+'%';
+  if(key==='cost') return n.toFixed(1)+'%';
+  if(key==='cg')   return Math.round(n)+'%';
+  return n;
+}
+function parseSval(key,str){
+  return parseFloat(String(str).replace(/[$%,]/g,''))||0;
+}
+function syncSlider(key,val){
+  const n=parseFloat(val);
+  document.getElementById(key+'-text').value=formatSval(key,n);
+  applySliderVal(key,n); update();
+}
+function syncText(key,str){
+  let n=parseSval(key,str);
+  if(key==='cg')  n=Math.min(20,Math.max(0,n));
+  if(key==='cost')n=Math.min(10,Math.max(0,n));
+  document.getElementById(key+'-range').value=n;
+  document.getElementById(key+'-text').value=formatSval(key,n);
+  applySliderVal(key,n); update();
+}
+function applySliderVal(key,n){
+  if(key==='fv')  S.fv=n;
+  if(key==='cost')S.costPct=n;
+  if(key==='prep')S.prep=n;
+  if(key==='cg')  S.cgRate=n;
+}
+
+// ─────────────────────────────────────────
+// Recalculate
+// ─────────────────────────────────────────
+function recalculate(){
+  S.address     = document.getElementById('address').value.trim();
+  S.currentVal  = parseDollar(document.getElementById('currentVal').value);
+  S.apprRate    = parsePct(document.getElementById('apprRate').value);
+  S.purchase    = parseDollar(document.getElementById('purchase').value);
+  S.down=getDownDollars();
+  S.balance     = parseDollar(document.getElementById('balance').value);
+  S.rate        = parsePct(document.getElementById('rate').value);
+  S.pmt         = parseDollar(document.getElementById('pmt').value);
+  S.escrow      = parseDollar(document.getElementById('escrow').value);
+  S.loanTerm    = +document.getElementById('loanTerm').value||360;
+  S.extraPmt    = parseDollar(document.getElementById('extraPmt').value);
+  S.months      = Math.max(1,+document.getElementById('months').value||12);
+  S.purchaseDate= document.getElementById('purchaseDate').value;
+  S.filingStatus= document.getElementById('filingStatus').value;
+
+  if(S.fv<S.purchase*0.4||S.fv>S.purchase*4){
+    S.fv=Math.round(S.purchase*1.1/1000)*1000;
+    document.getElementById('fv-range').value=S.fv;
+    document.getElementById('fv-text').value=formatSval('fv',S.fv);
+  }
+
+  update();
+}
+
+// ─────────────────────────────────────────
+// Main update
+// ─────────────────────────────────────────
+function update(){
+  const R=calc();
+
+  const eqPct=Math.min(100,Math.max(0,Math.round(R.equity/S.fv*100)));
+  document.getElementById('equity-bar').style.width=eqPct+'%';
+  document.getElementById('equity-pct-label').textContent=eqPct+'% equity';
+  document.getElementById('equity-amt').textContent=fmt(R.equity)+' equity';
+  document.getElementById('home-val-label').textContent=fmt(S.fv)+' est. value';
+
+  // PMI badge on balance field
+  const pmiBadge = document.getElementById('pmi-badge');
+  const pmiBadgeText = document.getElementById('pmi-badge-text');
+  if(R.hasPMI && pmiBadge){
+    pmiBadge.style.display='inline-flex';
+    pmiBadgeText.textContent=`PMI est. ~${fmt(R.monthlyPMI)}/mo until balance reaches ${fmt(R.pmiThresholdBal)}`;
+  } else if(pmiBadge){
+    pmiBadge.style.display='none';
+  }
+
+  document.getElementById('breakeven-val').textContent=fmt(R.breakEven);
+  const beDiff=S.fv-R.breakEven;
+  document.getElementById('breakeven-sub').textContent=beDiff>=0
+    ?`Your target price is ${fmt(beDiff)} above break-even`
+    :`Your target is ${fmt(Math.abs(beDiff))} below break-even`;
+
+  const cgEl=document.getElementById('cg-note');
+  if(!R.qualifies){
+    const mo=24-R.ownedMo;
+    cgEl.className='note-box note-red';
+    cgEl.innerHTML=`<strong>Heads up:</strong> At time of sale you'll be ~<strong>${mo} month${mo!==1?'s':''} short</strong> of the 2-year ownership requirement. The full ~${fmt(R.grossGain)} gain could be taxable. Consider waiting or consult a CPA.`;
+  } else if(S.cgRate===0){
+    cgEl.className='note-box note-green';
+    cgEl.innerHTML=`<strong>Good news:</strong> You likely qualify for the IRS primary residence exclusion (${S.filingStatus==='married'?'$500,000 married/joint':'$250,000 single'}). Your estimated gain of ~${fmt(R.grossGain)} is within the limit — you likely owe <strong>$0</strong> in capital gains.`;
+  } else {
+    cgEl.className='note-box note-amber';
+    cgEl.innerHTML=`At <strong>${Math.round(S.cgRate)}%</strong>, estimated capital gains tax is <strong>${fmt(R.cgTax)}</strong> on ~${fmt(R.taxableGain)} taxable gain after the ${fmt(R.exclusion)} exclusion. Long-term rates: 0%, 15%, or 20% by income. Consult a CPA.`;
+  }
+
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric-card"><div class="lbl">Est. sale price</div><div class="val">${fmt(S.fv)}</div></div>
+    <div class="metric-card">
+      <div class="lbl">Payoff at sale</div>
+      <div class="val">${fmt(R.payoff)}</div>
+      ${R.extraSavings>0?`<div class="sub" style="color:var(--green)">↓ ${fmt(R.extraSavings)} from extra pmts</div>`:''}
+    </div>
+    <div class="metric-card"><div class="lbl">Total costs</div><div class="val r">${fmt(R.totalCosts)}</div></div>
+    <div class="metric-card">
+      <div class="lbl">Net cash at closing</div>
+      <div class="val ${cc(R.netAtClose)}">${fmt(R.netAtClose)}</div>
+      <div class="sub">After payoff &amp; all costs</div>
+    </div>
+    <div class="metric-card">
+      <div class="lbl">Net Gain on Investment</div>
+      <div class="val ${cc(R.netProfitWithPMI)}">${fmtSign(R.netProfitWithPMI)}</div>
+      <div class="sub">${R.totalPMI>0?'After costs, interest &amp; PMI':'After all costs &amp; interest'}</div>
+    </div>
+  `;
+
+  const cgRow=R.cgTax>0?`<div class="brow"><span class="bl">Capital gains tax (${Math.round(S.cgRate)}%)</span><span class="bv r">−${fmt(R.cgTax)}</span></div>`:'';
+  const mortRow=`<div class="brow"><span class="bl">Mortgage payoff at sale${R.extraSavings>0?' (incl. extra pmts, saves '+fmt(R.extraSavings)+')':''}</span><span class="bv r">−${fmt(R.payoff)}</span></div>`;
+  const pmiRow = R.totalPMI > 0
+    ? `<div class="brow"><span class="bl">PMI paid (until 80% LTV reached)</span><span class="bv r">−${fmt(R.totalPMI)}</span></div>` : '';
+  const appreciation=S.fv-S.purchase;
+  const histRows=`
+    <div class="brow"><span class="bl">Price appreciation (${fmt(S.fv)} − ${fmt(S.purchase)})</span><span class="bv ${cc(appreciation)}">${fmtSign(appreciation)}</span></div>
+    <div class="brow"><span class="bl">Selling costs &amp; prep</span><span class="bv r">−${fmt(R.sellingCosts+R.prepDollars)}</span></div>
+    ${R.cgTax>0?`<div class="brow"><span class="bl">Capital gains tax</span><span class="bv r">−${fmt(R.cgTax)}</span></div>`:''}
+    <div class="brow"><span class="bl">Interest paid (${R.totalMo} mo., purchase → sale)</span><span class="bv r">−${fmt(R.totalIntPaid)}</span></div>
+    ${pmiRow}`;
+
+  // Visual proportion bar
+  const barTotal = S.fv > 0 ? S.fv : 1;
+  const payoffW  = Math.round(Math.min(R.payoff/barTotal*100, 100));
+  const costsW   = Math.round(Math.min(R.totalCosts/barTotal*100, 100-payoffW));
+  const netW     = Math.max(0, 100-payoffW-costsW);
+  const barHtml  = S.fv > 0 ? `
+    <div class="breakdown-bar">
+      <div class="breakdown-bar-seg bb-payoff" style="width:${payoffW}%"></div>
+      <div class="breakdown-bar-seg bb-costs"  style="width:${costsW}%"></div>
+      <div class="breakdown-bar-seg bb-net"    style="width:${netW}%"></div>
+    </div>
+    <div class="breakdown-bar-legend">
+      <span><span class="bb-dot" style="background:#b83228"></span>Mortgage payoff ${fmt(R.payoff)} (${payoffW}%)</span>
+      <span><span class="bb-dot" style="background:#c8a96e"></span>Costs ${fmt(R.totalCosts)} (${costsW}%)</span>
+      <span><span class="bb-dot" style="background:#1a7a5e"></span>Net to you ${fmt(Math.max(0,R.netAtClose))} (${netW}%)</span>
+    </div>` : '';
+
+  document.getElementById('breakdown').innerHTML=barHtml+`
+    <div class="brow"><span class="bl">Sale price</span><span class="bv">${fmt(S.fv)}</span></div>
+    <div class="brow"><span class="bl">Agent / closing costs (${(+S.costPct).toFixed(1)}%)</span><span class="bv r">−${fmt(R.sellingCosts)}</span></div>
+    <div class="brow"><span class="bl">Staging, repairs &amp; cleaning (${(+S.prep).toFixed(1)}%)</span><span class="bv r">−${fmt(R.prepDollars)}</span></div>
+    ${cgRow}${mortRow}
+    <hr class="div">
+    <div class="trow"><span>Net cash at closing</span><span class="tv ${cc(R.netAtClose)}">${fmt(R.netAtClose)}</span></div>
+    <hr class="div" style="margin-bottom:8px">
+    ${histRows}
+    <hr class="div">
+    <div class="trow"><span>Net gain on investment</span><span class="tv ${cc(R.netProfitWithPMI)}">${fmtSign(R.netProfitWithPMI)}</span></div>
+    <div style="font-size:12px;color:var(--ink3);margin-top:6px;line-height:1.5">Your true investment return: appreciation minus interest, PMI, and selling costs. Down payment &amp; principal are your own capital returning to you — not a gain or loss.</div>
+  `;
+}
+
+// ─────────────────────────────────────────
+// Net Sheet PDF
+// ─────────────────────────────────────────
+function generateNetSheetPDF(){
+  if(!window.jspdf){ alert('PDF library still loading, please try again.'); return; }
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'pt',format:'letter'});
+  const R=calc();
+  const W=612, M=54, RX=W-M;
+  let y=M;
+
+  // Helpers
+  const setFont=(size,weight,color)=>{
+    doc.setFontSize(size);
+    doc.setFont('helvetica',weight||'normal');
+    doc.setTextColor(...(color||[26,26,24]));
+  };
+  const line=(x1,y1,x2,y2,color)=>{
+    doc.setDrawColor(...(color||[226,223,214]));
+    doc.setLineWidth(0.5);
+    doc.line(x1,y1,x2,y2);
+  };
+  const row=(label,value,opts={})=>{
+    const bold=opts.bold, clr=opts.color||[74,74,68];
+    setFont(opts.size||10,'normal',clr);
+    doc.text(label,M,y);
+    setFont(opts.size||10,bold?'bold':'normal',opts.valueColor||clr);
+    doc.text(value,RX,y,{align:'right'});
+    y+=opts.gap||18;
+  };
+  const divider=(clr)=>{ line(M,y,RX,y,clr); y+=10; };
+  const spacer=(n)=>{ y+=n||8; };
+
+  // ── Header ──
+  doc.setFillColor(26,26,24);
+  doc.rect(0,0,W,70,'F');
+  setFont(20,'bold',[255,255,255]);
+  doc.text('Estimated Seller\'s Net Sheet',M,38);
+  setFont(9,'normal',[200,169,110]);
+  doc.text('HOME SALE ESTIMATOR  ·  ESTIMATE ONLY — NOT A LEGAL DOCUMENT',M,54);
+  y=90;
+
+  // ── Property & date ──
+  if(S.address){
+    setFont(11,'bold',[26,26,24]);
+    doc.text(S.address,M,y); y+=16;
+  }
+  setFont(9,'normal',[138,138,130]);
+  doc.text('Prepared: '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),M,y);
+  const moLabel=S.months+' month'+(S.months!==1?'s':'')+' to sale';
+  doc.text(moLabel,RX,y,{align:'right'});
+  y+=20; divider([200,200,194]); spacer(4);
+
+  // ── Section: Sale proceeds ──
+  setFont(8,'bold',[138,138,130]);
+  doc.text('ESTIMATED SALE PROCEEDS',M,y); y+=16;
+
+  row('Estimated Sale Price',fmt(S.fv),{bold:false,color:[26,26,24],size:11});
+  spacer(2);
+  row(`Agent & Closing Costs (${(+S.costPct).toFixed(1)}%)`, '−'+fmt(R.sellingCosts),{color:[192,57,43]});
+  row(`Staging, Repairs & Cleaning (${(+S.prep).toFixed(1)}%)`,'−'+fmt(R.prepDollars),{color:[192,57,43]});
+  if(R.cgTax>0) row(`Capital Gains Tax (${Math.round(S.cgRate)}%)`,'−'+fmt(R.cgTax),{color:[192,57,43]});
+  row('Mortgage Payoff at Sale','−'+fmt(R.payoff),{color:[192,57,43]});
+  spacer(4); divider(); spacer(4);
+  row('NET CASH AT CLOSING',fmt(R.netAtClose),{bold:true,size:12,color:[26,26,24],valueColor:R.netAtClose>=0?[26,122,94]:[192,57,43]});
+  spacer(8);
+
+  // ── Section: True profitability ──
+  setFont(8,'bold',[138,138,130]);
+  doc.text('NET GAIN ON INVESTMENT',M,y); y+=16;
+
+  row('Net Cash at Closing',fmt(R.netAtClose),{color:R.netAtClose>=0?[26,122,94]:[192,57,43]});
+  row(`Price Appreciation (Sale − Purchase)`,fmtSign(S.fv-S.purchase),{color:S.fv>=S.purchase?[26,122,94]:[192,57,43]});
+  row(`Interest Paid (${R.totalMo} mo., purchase → sale)`,'−'+fmt(R.totalIntPaid),{color:[192,57,43]});
+  row('Selling Costs & Prep','−'+fmt(R.sellingCosts+R.prepDollars),{color:[192,57,43]});
+  if(R.totalPMI>0) row('PMI Paid (until 80% LTV)','−'+fmt(R.totalPMI),{color:[192,57,43]});
+  row('Original Down Payment','−'+fmt(S.down),{color:[192,57,43]});
+  spacer(4); divider(); spacer(4);
+  row('NET PROFIT AFTER ALL COSTS',fmtSign(R.netProfit),{bold:true,size:12,color:[26,26,24],valueColor:R.netProfit>=0?[26,122,94]:[192,57,43]});
+  spacer(8);
+
+  // ── Section: Reference ──
+  setFont(8,'bold',[138,138,130]);
+  doc.text('REFERENCE',M,y); y+=16;
+
+  row('Break-Even Sale Price',fmt(R.breakEven),{color:[26,90,138]});
+  row('Current Equity (at sale)',fmt(R.equity));
+  row('Purchase Price',fmt(S.purchase));
+  row('Original Down Payment',fmt(S.down));
+    row('Interest Rate',S.rate+'%');
+    row('Monthly P&I Payment',fmt(S.pmt));
+    if(S.extraPmt>0) row('Extra Monthly Principal',fmt(S.extraPmt));
+    if(R.extraSavings>0) row('Savings from Extra Payments',fmt(R.extraSavings),{color:[26,122,94]});
+  spacer(4); divider([200,200,194]); spacer(8);
+
+  // ── Capital gains ──
+  setFont(9,'normal',[138,138,130]);
+  const cgText=R.qualifies
+    ?`Capital gains: Qualifies for IRS primary residence exclusion (${fmtD(R.exclusion)}). Estimated taxable gain: ${fmt(R.taxableGain)}.`
+    :`Capital gains: May not qualify for primary residence exclusion — approximately ${24-R.ownedMo} months short of 2-year requirement.`;
+  const split=doc.splitTextToSize(cgText,W-M*2);
+  doc.text(split,M,y); y+=split.length*13+8;
+
+  // ── Footer ──
+  const footerY=756;
+  line(M,footerY,RX,footerY,[200,200,194]);
+  setFont(7,'normal',[138,138,130]);
+  doc.text('This is an estimate only and does not constitute legal, tax, or financial advice. Actual closing figures will vary. Consult your real estate agent, title company, and CPA for exact numbers.',M,footerY+12,{maxWidth:W-M*2});
+  doc.text('Generated by Home Sale Estimator',RX,footerY+12,{align:'right'});
+
+  const filename=S.address?'net-sheet-'+S.address.split(',')[0].replace(/\s+/g,'-').toLowerCase()+'.pdf':'net-sheet.pdf';
+  doc.save(filename);
+
+  const btn=document.getElementById('pdf-btn');
+  btn.textContent='✓ Downloaded!'; btn.classList.add('success');
+  setTimeout(()=>{btn.innerHTML='📄 Download Net Sheet PDF';btn.classList.remove('success');},2500);
+}
+
+// ─────────────────────────────────────────
+// Copy results
+// ─────────────────────────────────────────
+function copyResults(){
+  const R=calc();
+  const lines=[
+    'HOME SALE ESTIMATE',
+    S.address?S.address:'',
+    '──────────────────────────',
+    `Est. sale price:       ${fmt(S.fv)}`,
+    `Selling costs:         −${fmt(R.sellingCosts)}`,
+    `Prep costs:            −${fmt(S.prep)}`,
+    R.cgTax>0?`Capital gains tax:     −${fmt(R.cgTax)}`:null,
+    `Mortgage payoff:       −${fmt(R.payoff)}`,
+    `Net cash at closing:   ${fmt(R.netAtClose)}`,
+    '──────────────────────────',
+    `Down payment:          −${fmt(S.down)}`,
+    `Price appreciation:    ${fmtSign(S.fv-S.purchase)}`,
+    `Interest paid:         −${fmt(R.totalIntPaid)}`,
+    `Selling costs & prep:  −${fmt(R.sellingCosts+R.prepDollars)}`,
+    R.cgTax>0?`Capital gains:         −${fmt(R.cgTax)}`:null,
+    `Net profit (all-in):   ${fmtSign(R.netProfit)}`,
+    '──────────────────────────',
+    `Break-even price:      ${fmt(R.breakEven)}`,
+    R.extraSavings>0?`Extra pmt savings:     ${fmt(R.extraSavings)}`:null,
+  ].filter(Boolean).join('\n');
+  navigator.clipboard.writeText(lines).then(()=>{
+    const btn=document.getElementById('copy-btn');
+    btn.textContent='✓ Copied!'; btn.classList.add('success');
+    setTimeout(()=>{btn.textContent='📋 Copy Results';btn.classList.remove('success');},2000);
+  }).catch(()=>prompt('Copy this:',lines));
+}
+
+
+// ─────────────────────────────────────────
+// Collapsible additional details
+// ─────────────────────────────────────────
+function toggleAdvanced(){
+  const toggle = document.getElementById('adv-toggle');
+  const content = document.getElementById('adv-content');
+  const isOpen = content.classList.contains('open');
+  toggle.classList.toggle('open', !isOpen);
+  content.classList.toggle('open', !isOpen);
+}
+
+
+// ─────────────────────────────────────────
+// Toggle
+// ─────────────────────────────────────────
+
+// ─────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────
+refreshAutoPayment();
+updateDownComputed();
+updateApprSuggest();
+recalculate();
+</script>
+</body>
+</html>
