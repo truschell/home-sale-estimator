@@ -241,6 +241,16 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
 @media(max-width:780px){
   .tier1-grid{grid-template-columns:repeat(2,1fr)}
 }
+
+/* Required field asterisk */
+.req{color:var(--red);margin-left:2px;font-size:11px}
+/* Form meta row (required note + clear button) */
+.form-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
+.form-meta-note{font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:4px}
+.form-meta-note .req{margin-left:0}
+.btn-clear{padding:.45rem 1rem;border:1.5px solid var(--paper3);border-radius:8px;background:var(--white);color:var(--ink3);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.btn-clear:hover{background:var(--red-bg);border-color:rgba(184,50,40,.3);color:var(--red)}
+.btn-clear:active{transform:scale(.97)}
 </style>
 </head>
 <body>
@@ -258,42 +268,47 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
   <div class="section-label">Your home</div>
   <div class="panel">
     <!-- Hidden months value — driven by saleMonth picker -->
-    <input type="hidden" id="months" value="12">
+    <input type="hidden" id="months" value="0">
+    <!-- Form meta: required note + clear all -->
+    <div class="form-meta">
+      <span class="form-meta-note"><span class="req">*</span> Required fields</span>
+      <button class="btn-clear" onclick="clearAll()" title="Reset all fields to start over">&#10005; Clear all</button>
+    </div>
     <!-- TIER 1: Essential inputs always visible -->
     <div class="tier1-grid">
       <div class="input-group full-width">
-        <label>Property Address</label>
+        <label>Property Address <span class="req">*</span></label>
         <input type="text" id="address" class="addr" placeholder="e.g. 123 Main St, City, State ZIP" oninput="updatePropLinks();updateTitle()">
         <span class="hint">Used for property lookup links and the net sheet PDF</span>
       </div>
       <div class="input-group">
-        <label>Current Estimated Value ($)</label>
+        <label>Current Estimated Value ($) <span class="req">*</span></label>
         <input type="text" id="currentVal" value="" placeholder="e.g. $320,000" onblur="fmtDollarField(this)" oninput="updateApprSuggest();recalculate()">
         <span class="hint">Your Zestimate, Redfin estimate, or own assessment</span>
       </div>
       <div class="input-group">
-        <label>Purchase Price</label>
-        <input type="text" id="purchase" value="" placeholder="$300,000" onblur="fmtDollarField(this)" oninput="onAnyInputChange()">
+        <label>Purchase Price <span class="req">*</span></label>
+        <input type="text" id="purchase" value="" placeholder="e.g. $350,000" onblur="fmtDollarField(this)" oninput="onAnyInputChange()">
         <span class="hint">Original price paid</span>
       </div>
       <div class="input-group">
         <label>Down Payment (%)</label>
-        <input type="text" id="down" value="20%" placeholder="20%" onblur="fmtPctField(this);onAnyInputChange()" oninput="onAnyInputChange()">
+        <input type="text" id="down" value="" placeholder="e.g. 20%" onblur="fmtPctField(this);onAnyInputChange()" oninput="onAnyInputChange()">
         <div id="down-computed" style="font-size:11px;color:var(--ink3);margin-top:3px;font-family:'DM Mono',monospace"></div>
       </div>
       <div class="input-group">
-        <label>Purchase Month</label>
+        <label>Purchase Month <span class="req">*</span></label>
         <input type="month" id="purchaseDate" onchange="onAnyInputChange()">
         <span class="hint">Used for the 2-year capital gains exclusion check</span>
       </div>
       <div class="input-group">
-        <label>Target Sale Month</label>
+        <label>Target Sale Month <span class="req">*</span></label>
         <input type="month" id="saleMonth" onchange="onSaleMonthChange()">
         <span id="months-label" style="font-size:11px;color:var(--ink3);font-family:'DM Mono',monospace;margin-top:2px"></span>
       </div>
       <div class="input-group">
         <label>Interest Rate (%)</label>
-        <input type="text" id="rate" value="6%" placeholder="6%" onblur="fmtPctField(this);onAnyInputChange()" oninput="onAnyInputChange()">
+        <input type="text" id="rate" value="" placeholder="e.g. 6%" onblur="fmtPctField(this);onAnyInputChange()" oninput="onAnyInputChange()">
         <span class="hint">Annual rate on your mortgage</span>
       </div>
     </div>
@@ -336,7 +351,7 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
         </div>
         <div class="input-group">
           <label>Expected Annual Growth (%)</label>
-          <input type="text" id="apprRate" value="3%" placeholder="3%" onblur="fmtPctField(this)" oninput="updateApprSuggest();recalculate()">
+          <input type="text" id="apprRate" value="" placeholder="e.g. 3%" onblur="fmtPctField(this)" oninput="updateApprSuggest();recalculate()">
           <span class="hint">Used to project future value. Nat'l avg ~3-4%/yr.</span>
         </div>
         <div class="input-group">
@@ -354,7 +369,7 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
         <input type="hidden" id="otherAdj" value="0">
         <div class="input-group">
           <label>PMI Rate (%/yr)</label>
-          <input type="text" id="pmiRate" value="0.8%" placeholder="0.8%" onblur="fmtPctField(this)" oninput="recalculate()">
+          <input type="text" id="pmiRate" value="" placeholder="e.g. 0.8%" onblur="fmtPctField(this)" oninput="recalculate()">
           <span class="hint">Applies when down payment &lt; 20%. Typically 0.2%-2%.</span>
         </div>
         <div class="input-group">
@@ -482,10 +497,15 @@ function updateTitle(){const a=document.getElementById('address').value.trim();d
 function validate(){
   const issues=[];
   const pEl=document.getElementById('purchase'),rEl=document.getElementById('rate');
+  const pdEl=document.getElementById('purchaseDate'),smEl=document.getElementById('saleMonth');
   pEl.classList.toggle('input-error',S.purchase<=0);
   rEl.classList.toggle('input-error',S.rate<=0);
+  pdEl.classList.toggle('input-error',!S.purchaseDate);
+  smEl.classList.toggle('input-error',!document.getElementById('saleMonth').value);
   if(S.purchase<=0){issues.push('Purchase price is required');S.fv=0;}
   if(S.rate<=0)issues.push('Interest rate is required');
+  if(!S.purchaseDate)issues.push('Purchase month is required');
+  if(!document.getElementById('saleMonth').value)issues.push('Target sale month is required');
   const banner=document.getElementById('validation-banner'),list=document.getElementById('validation-list');
   if(issues.length){banner.classList.add('show');list.innerHTML=issues.map(i=>'<li>'+i+'</li>').join('');document.getElementById('results-wrapper').style.display='none';document.getElementById('no-data-state').style.display='block';return false;}
   banner.classList.remove('show');document.getElementById('results-wrapper').style.display='block';document.getElementById('no-data-state').style.display='none';return true;
@@ -508,6 +528,7 @@ function onSaleMonthChange(){
   const mo=monthsUntil(val);
   document.getElementById('months').value=mo;
   updateMonthsLabel(mo,val);
+  buildLaterDropdown(val);
   updateApprSuggest();recalculate();
 }
 function updateMonthsLabel(mo,ym){
@@ -936,17 +957,71 @@ function copyResults(){
   navigator.clipboard.writeText(lines).then(()=>{const btn=document.getElementById('copy-btn');btn.textContent='\u2713 Copied!';btn.classList.add('success');setTimeout(()=>{btn.textContent='\uD83D\uDCCB Copy Results';btn.classList.remove('success');},2000);}).catch(()=>prompt('Copy this:',lines));
 }
 (function init(){
-  const fya=new Date();fya.setFullYear(fya.getFullYear()-5);
-  document.getElementById('purchaseDate').value=yyyymm(fya);
+  // Leave purchaseDate and saleMonth blank — user must fill them in
+  // Build comparison dropdown from today forward as neutral base
   const nowYM=yyyymm(new Date());
-  const saleYM=addMonths(nowYM,12);
-  document.getElementById('saleMonth').value=saleYM;
-  document.getElementById('months').value=12;
-  updateMonthsLabel(12,saleYM);
-  buildLaterDropdown(saleYM);
+  buildLaterDropdown(addMonths(nowYM,1));
   document.getElementById('results-wrapper').style.display='none';
   document.getElementById('no-data-state').style.display='block';
 })();
+
+// ── Clear All ──
+function clearAll(){
+  // Text/number inputs
+  ['address','currentVal','purchase','down','rate','apprRate','extraPmt',
+   'improvements','pmiRate','balance','pmt'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.value='';el.classList.remove('auto-val','input-error');}
+  });
+  // Month pickers
+  ['purchaseDate','saleMonth'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.value='';el.classList.remove('input-error');}
+  });
+  // Hidden fields
+  document.getElementById('months').value='0';
+  document.getElementById('concessions').value='0';
+  document.getElementById('otherAdj').value='0';
+  // Loan term dropdown back to default
+  document.getElementById('loanTerm').value='360';
+  // Filing status back to default
+  document.getElementById('filingStatus').value='married';
+  // Sliders back to defaults
+  ['cost','prep','conc','other','cg'].forEach(key=>{
+    const defaults={cost:6,prep:1,conc:0,other:0,cg:0};
+    const rangeEl=document.getElementById(key+'-range');
+    const textEl=document.getElementById(key+'-text');
+    if(rangeEl)rangeEl.value=defaults[key];
+    if(textEl)textEl.value=formatSval(key,defaults[key]);
+  });
+  // fv slider
+  document.getElementById('fv-range').value=document.getElementById('fv-range').min;
+  document.getElementById('fv-text').value='';
+  // Reset state
+  S={address:'',currentVal:0,apprRate:0,purchase:0,down:0,balance:0,balanceAuto:true,
+     rate:0,pmt:0,pmtAuto:true,loanTerm:360,pmiRatePct:.8,extraPmt:0,months:0,
+     purchaseDate:'',filingStatus:'married',fv:0,costPct:6,prep:1,cgRate:0,
+     concPct:0,otherPct:0,concessions:0,improvements:0,otherAdj:0};
+  // Reset auto badges
+  ['balance-badge','balance-override','pmt-badge','pmt-override'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='none';
+  });
+  document.getElementById('balance-reset').style.display='none';
+  // Reset UI state
+  document.getElementById('months-label').textContent='';
+  document.getElementById('down-computed').innerHTML='';
+  document.getElementById('prop-links-section').style.display='none';
+  document.getElementById('appr-suggest-strip').style.display='none';
+  document.getElementById('fv-hint').style.display='none';
+  document.getElementById('validation-banner').classList.remove('show');
+  document.getElementById('results-wrapper').style.display='none';
+  document.getElementById('no-data-state').style.display='block';
+  // Close advanced section
+  document.getElementById('adv-basic-content').classList.remove('open');
+  document.getElementById('adv-basic-toggle').classList.remove('open');
+  // Rebuild compare dropdown
+  buildLaterDropdown(addMonths(yyyymm(new Date()),1));
+}
 
 // ── FIX #4: toggle advanced basic inputs ──
 function toggleAdvancedBasic(){
