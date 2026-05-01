@@ -257,6 +257,8 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
   </div>
   <div class="section-label">Your home</div>
   <div class="panel">
+    <!-- Hidden months value — driven by saleMonth picker -->
+    <input type="hidden" id="months" value="12">
     <!-- TIER 1: Essential inputs always visible -->
     <div class="tier1-grid">
       <div class="input-group full-width">
@@ -275,9 +277,19 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
         <span class="hint">Original price paid</span>
       </div>
       <div class="input-group">
+        <label>Down Payment (%)</label>
+        <input type="text" id="down" value="20%" placeholder="20%" onblur="fmtPctField(this);onAnyInputChange()" oninput="onAnyInputChange()">
+        <div id="down-computed" style="font-size:11px;color:var(--ink3);margin-top:3px;font-family:'DM Mono',monospace"></div>
+      </div>
+      <div class="input-group">
+        <label>Purchase Month</label>
+        <input type="month" id="purchaseDate" onchange="onAnyInputChange()">
+        <span class="hint">Used for the 2-year capital gains exclusion check</span>
+      </div>
+      <div class="input-group">
         <label>Target Sale Month</label>
         <input type="month" id="saleMonth" onchange="onSaleMonthChange()">
-        <span class="hint">When you plan to sell</span>
+        <span id="months-label" style="font-size:11px;color:var(--ink3);font-family:'DM Mono',monospace;margin-top:2px"></span>
       </div>
       <div class="input-group">
         <label>Interest Rate (%)</label>
@@ -289,30 +301,13 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
       <div style="font-size:11px;color:var(--ink3);margin-bottom:.5rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em">Look up value on</div>
       <div class="prop-links" id="prop-links"></div>
     </div>
-    <!-- TIER 2: Advanced inputs collapsible -->
+    <!-- Additional details collapsible — single flat section -->
     <div class="advanced-toggle" id="adv-basic-toggle" onclick="toggleAdvancedBasic()">
-      <div class="at-label">Advanced inputs <span class="at-tip">Refine your estimate</span></div>
+      <div class="at-label">Additional details <span class="at-tip">Refine your estimate</span></div>
       <span class="at-chevron">&#9660;</span>
     </div>
     <div class="advanced-inputs" id="adv-basic-content">
       <div class="inputs-grid" style="margin-top:.75rem">
-        <div class="form-section-head">Loan details</div>
-        <div class="input-group">
-          <label>Down Payment (%)</label>
-          <input type="text" id="down" value="20%" placeholder="20%" onblur="fmtPctField(this);onAnyInputChange()" oninput="onAnyInputChange()">
-          <div id="down-computed" style="font-size:11px;color:var(--ink3);margin-top:3px;font-family:'DM Mono',monospace"></div>
-          <span class="hint">% of purchase price</span>
-        </div>
-        <div class="input-group">
-          <label>Purchase Month</label>
-          <input type="month" id="purchaseDate" onchange="onAnyInputChange()">
-          <span class="hint">Used for the 2-year capital gains exclusion check</span>
-        </div>
-        <div class="input-group">
-          <label>Months Until Sale</label>
-          <input type="number" id="months" value="12" min="0" max="240" step="1" oninput="onMonthsManualEdit();recalculate()">
-          <span class="hint">Or type directly — updates the month above</span>
-        </div>
         <div class="input-group">
           <label>Current Mortgage Balance</label>
           <input type="text" id="balance" value="" class="auto-val" placeholder="auto-calculated" onblur="fmtDollarField(this)" oninput="onBalanceManualEdit()">
@@ -344,7 +339,6 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
           <input type="text" id="apprRate" value="3%" placeholder="3%" onblur="fmtPctField(this)" oninput="updateApprSuggest();recalculate()">
           <span class="hint">Used to project future value. Nat'l avg ~3-4%/yr.</span>
         </div>
-        <div class="form-section-head">Selling costs &amp; adjustments</div>
         <div class="input-group">
           <label>Extra Monthly Principal ($)</label>
           <input type="text" id="extraPmt" value="" placeholder="$0" onblur="fmtDollarField(this)" oninput="onExtraInput();recalculate()">
@@ -352,21 +346,12 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
           <span class="hint">Applied to future payments only</span>
         </div>
         <div class="input-group">
-          <label>Seller Concessions ($)</label>
-          <input type="text" id="concessions" value="" placeholder="$0" onblur="fmtDollarField(this)" oninput="recalculate()">
-          <span class="hint">Credits given to buyer at closing</span>
-        </div>
-        <div class="input-group">
           <label>Home Improvements ($)</label>
           <input type="text" id="improvements" value="" placeholder="$0" onblur="fmtDollarField(this)" oninput="recalculate()">
           <span class="hint">Adds to cost basis, reduces taxable gain</span>
         </div>
-        <div class="input-group">
-          <label>Other Closing Adjustments ($)</label>
-          <input type="text" id="otherAdj" value="" placeholder="$0" onblur="fmtDollarField(this)" oninput="recalculate()">
-          <span class="hint">HOA payoffs, tax prorations, transfer fees, etc.</span>
-        </div>
-        <div class="form-section-head">Tax settings</div>
+        <input type="hidden" id="concessions" value="0">
+        <input type="hidden" id="otherAdj" value="0">
         <div class="input-group">
           <label>PMI Rate (%/yr)</label>
           <input type="text" id="pmiRate" value="0.8%" placeholder="0.8%" onblur="fmtPctField(this)" oninput="recalculate()">
@@ -442,6 +427,16 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
         <div class="slider-track"><input type="range" id="prep-range" min="0" max="5" step="0.25" value="1" oninput="syncSlider('prep',this.value)"></div>
         <input type="text" class="sval-input" id="prep-text" value="1.0%" onchange="syncText('prep',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
       </div>
+      <div class="slider-row" id="conc-slider-row" style="display:none">
+        <div class="slider-label">Seller concessions<small>Credits given to buyer</small></div>
+        <div class="slider-track"><input type="range" id="conc-range" min="0" max="5" step="0.25" value="0" oninput="syncSlider('conc',this.value)"></div>
+        <input type="text" class="sval-input" id="conc-text" value="0.0%" onchange="syncText('conc',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+      </div>
+      <div class="slider-row" id="other-slider-row" style="display:none">
+        <div class="slider-label">Other closing costs<small>HOA, prorations, fees</small></div>
+        <div class="slider-track"><input type="range" id="other-range" min="0" max="5" step="0.25" value="0" oninput="syncSlider('other',this.value)"></div>
+        <input type="text" class="sval-input" id="other-text" value="0.0%" onchange="syncText('other',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+      </div>
       <div class="slider-row">
         <div class="slider-label">Capital gains rate<small>Long-term: 0%, 15%, or 20%</small></div>
         <div class="slider-track"><input type="range" id="cg-range" min="0" max="20" step="1" value="0" oninput="syncSlider('cg',this.value)"></div>
@@ -474,7 +469,7 @@ hr.div{border:none;border-top:1.5px solid var(--paper3);margin:4px 0}
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-let S={address:'',currentVal:0,apprRate:3,purchase:0,down:0,balance:0,balanceAuto:true,rate:6,pmt:0,pmtAuto:true,loanTerm:360,pmiRatePct:.8,extraPmt:0,months:12,purchaseDate:'',filingStatus:'married',fv:0,costPct:6,prep:1,cgRate:0,concessions:0,improvements:0,otherAdj:0};
+let S={address:'',currentVal:0,apprRate:3,purchase:0,down:0,balance:0,balanceAuto:true,rate:6,pmt:0,pmtAuto:true,loanTerm:360,pmiRatePct:.8,extraPmt:0,months:12,purchaseDate:'',filingStatus:'married',fv:0,costPct:6,prep:1,cgRate:0,concPct:0,otherPct:0,concessions:0,improvements:0,otherAdj:0};
 const parseDollar=s=>parseFloat(String(s).replace(/[$,\s]/g,''))||0;
 const parsePct=s=>parseFloat(String(s).replace(/[%\s]/g,''))||0;
 const fmtD=n=>'$'+Math.round(Math.abs(n)).toLocaleString('en-US');
@@ -510,10 +505,19 @@ function monthsUntil(ym){const now=new Date();now.setDate(1);now.setHours(0,0,0,
 function labelFrom(ym){const[y,m]=ym.split('-').map(Number);return MO[m-1]+' '+y;}
 function onSaleMonthChange(){
   const val=document.getElementById('saleMonth').value;if(!val)return;
-  document.getElementById('months').value=monthsUntil(val);
+  const mo=monthsUntil(val);
+  document.getElementById('months').value=mo;
+  updateMonthsLabel(mo,val);
   updateApprSuggest();recalculate();
 }
+function updateMonthsLabel(mo,ym){
+  const el=document.getElementById('months-label');
+  if(!el)return;
+  if(!ym||mo===null){el.textContent='';return;}
+  el.textContent='= '+mo+' month'+(mo!==1?'s':'')+' from now';
+}
 function onMonthsManualEdit(){
+  // kept for internal use, no UI field anymore
   const mo=Math.max(0,+document.getElementById('months').value||0);
   document.getElementById('saleMonth').value=addMonths(yyyymm(new Date()),mo);
   updateApprSuggest();
@@ -665,11 +669,19 @@ function calc(monthsOv,fvOv){
   const extraSavings=Math.max(0,payoffNoExtra-payoff);
   return{payoff,elapsed,totalMo,totalIntPaid,sellingCosts,prepDollars,grossGain,qualifies,exclusion,taxableGain,cgTax,netAtClose,totalCosts,netProfit,equity,breakEven,ownedMo,extraSavings,hasPMI,monthlyPMI,totalPMI,ltv,pmiThresholdBal:pmiThr,netProfitWithPMI,costBasis,fv,months};
 }
-function formatSval(key,val){const n=parseFloat(val);if(key==='fv')return '$'+Math.round(n).toLocaleString('en-US');if(key==='prep')return n.toFixed(2).replace(/\.?0+$/,'')+'%';if(key==='cost')return n.toFixed(1)+'%';if(key==='cg')return Math.round(n)+'%';return n;}
+function formatSval(key,val){const n=parseFloat(val);if(key==='fv')return '$'+Math.round(n).toLocaleString('en-US');if(key==='prep')return n.toFixed(2).replace(/\.?0+$/,'')+'%';if(key==='cost'||key==='conc'||key==='other')return n.toFixed(1)+'%';if(key==='cg')return Math.round(n)+'%';return n;}
 function parseSval(key,str){return parseFloat(String(str).replace(/[$%,]/g,''))||0;}
 function syncSlider(key,val){const n=parseFloat(val);document.getElementById(key+'-text').value=formatSval(key,n);if(key==='fv')showSalePricePlaceholder(false);applySliderVal(key,n);update();}
-function syncText(key,str){let n=parseSval(key,str);if(key==='cg')n=Math.min(20,Math.max(0,n));if(key==='cost')n=Math.min(10,Math.max(0,n));document.getElementById(key+'-range').value=n;document.getElementById(key+'-text').value=formatSval(key,n);applySliderVal(key,n);update();}
-function applySliderVal(key,n){if(key==='fv')S.fv=n;if(key==='cost')S.costPct=n;if(key==='prep')S.prep=n;if(key==='cg')S.cgRate=n;updateCompare();}
+function syncText(key,str){let n=parseSval(key,str);if(key==='cg')n=Math.min(20,Math.max(0,n));if(key==='cost'||key==='conc'||key==='other')n=Math.min(10,Math.max(0,n));if(key==='prep')n=Math.min(5,Math.max(0,n));document.getElementById(key+'-range').value=n;document.getElementById(key+'-text').value=formatSval(key,n);applySliderVal(key,n);update();}
+function applySliderVal(key,n){
+  if(key==='fv')S.fv=n;
+  if(key==='cost')S.costPct=n;
+  if(key==='prep')S.prep=n;
+  if(key==='cg')S.cgRate=n;
+  if(key==='conc'){S.concPct=n;if(S.fv>0)S.concessions=Math.round(S.fv*n/100);}
+  if(key==='other'){S.otherPct=n;if(S.fv>0)S.otherAdj=Math.round(S.fv*n/100);}
+  updateCompare();
+}
 function updateCompare(){
   if(S.purchase<=0){document.getElementById('compare-grid').innerHTML='';document.getElementById('compare-delta').style.display='none';return;}
   const saleYM=document.getElementById('saleMonth').value;
@@ -742,9 +754,18 @@ function recalculate(){
   S.pmt=parseDollar(document.getElementById('pmt').value);
   S.loanTerm=+document.getElementById('loanTerm').value||360;
   S.extraPmt=parseDollar(document.getElementById('extraPmt').value);
-  S.concessions=parseDollar(document.getElementById('concessions').value);
   S.improvements=parseDollar(document.getElementById('improvements').value);
-  S.otherAdj=parseDollar(document.getElementById('otherAdj').value);
+  // concessions and otherAdj are driven by sliders — computed below
+  // Slider-driven % costs — derive $ from current fv (or 0 if fv not set yet)
+  S.concPct=parseSval('conc',document.getElementById('conc-text').value)||0;
+  S.otherPct=parseSval('other',document.getElementById('other-text').value)||0;
+  // Convert % to $ using fv (or purchase as fallback)
+  const _base=S.fv||S.purchase||0;
+  S.concessions=Math.round(_base*S.concPct/100);
+  S.otherAdj=Math.round(_base*S.otherPct/100);
+  // Always show these slider rows
+  document.getElementById('conc-slider-row').style.display='flex';
+  document.getElementById('other-slider-row').style.display='flex';
   S.pmiRatePct=parsePct(document.getElementById('pmiRate').value)||.8;
   S.months=Math.max(0,+document.getElementById('months').value||0);
   S.purchaseDate=document.getElementById('purchaseDate').value;
@@ -921,6 +942,7 @@ function copyResults(){
   const saleYM=addMonths(nowYM,12);
   document.getElementById('saleMonth').value=saleYM;
   document.getElementById('months').value=12;
+  updateMonthsLabel(12,saleYM);
   buildLaterDropdown(saleYM);
   document.getElementById('results-wrapper').style.display='none';
   document.getElementById('no-data-state').style.display='block';
